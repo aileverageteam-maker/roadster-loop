@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no,maximum-scale=1">
+<meta name="screen-orientation" content="landscape">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Roadster Loop</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{--bg:#030508;--neon:#00e8ff;--gold:#ffc94d;--ok:#35ff7a;--bad:#ff3b5c;--ink:#e8f4ff;--yoke:#eef0f4;--panel:rgba(4,8,16,.92)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:var(--bg);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;font-family:system-ui,-apple-system,sans-serif;color:var(--ink)}
+#stage{position:fixed;left:0;top:0;width:100%;height:100%;transform-origin:center center;background:var(--bg);overflow:hidden}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#glass{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(255,190,70,.10) 0%,transparent 40%,rgba(255,190,70,.12) 100%);box-shadow:inset 0 60px 50px -30px #000,inset 0 -30px 30px -15px rgba(0,0,0,.4)}
+#gas{position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(circle at 50% 55%,rgba(255,255,255,.55),transparent 50%)}
+#gas.on{animation:gas .6s ease-out}@keyframes gas{0%{opacity:var(--o,1)}100%{opacity:0}}
+.layer{position:absolute;inset:0;display:none;pointer-events:none}.layer.on{display:block}
+button,.panel,.pill,.tapzone{pointer-events:auto}
+.top{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));left:12px;right:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;z-index:5}
+.pill{background:var(--panel);border:1px solid rgba(0,232,255,.4);border-radius:22px;padding:6px 14px;font-size:15px;font-weight:600;backdrop-filter:blur(8px)}
+.row{position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;align-items:center;gap:24px;z-index:5}
+.panel .row{position:static;margin-top:14px;flex-wrap:wrap;gap:12px}
+.ib{border:2px solid var(--neon);background:rgba(0,232,255,.1);color:var(--ink);border-radius:50%;width:56px;height:56px;font-size:22px;cursor:pointer;box-shadow:0 0 16px rgba(0,232,255,.2);padding:0;-webkit-tap-highlight-color:transparent}
+.ib:active{transform:scale(.92)}
+.ib.big{width:92px;height:92px;font-size:42px}
+.panel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid rgba(0,232,255,.45);border-radius:18px;padding:18px 24px;text-align:center;font-size:20px;min-width:240px;backdrop-filter:blur(12px)}
+#splash{background:radial-gradient(ellipse at 50% 40%,#0a1525 0%,var(--bg) 70%)}
+#splash.on{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+#splash .logo{width:min(68vw,340px);filter:drop-shadow(0 0 14px rgba(0,232,255,.45))}
+#splash .tag{font-size:13px;letter-spacing:4px;color:rgba(0,232,255,.65);opacity:0;animation:fi .5s 1s forwards}
+@keyframes fi{to{opacity:1}}
+.wf{fill:none;stroke:var(--neon);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1200;stroke-dashoffset:1200;animation:dr 1.4s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes dr{to{stroke-dashoffset:0}}
+.wf-fill{fill:rgba(0,232,255,.07);stroke:none;opacity:0;animation:fi .4s 1.1s forwards}
+#menu .title{position:absolute;top:11%;left:0;right:0;text-align:center;font-size:clamp(22px,5vw,36px);font-weight:800;letter-spacing:3px;background:linear-gradient(90deg,var(--neon),#7af,#ffc94d);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#menu .route{position:absolute;top:24%;left:0;right:0;text-align:center;font-size:14px;color:rgba(0,232,255,.7)}
+#menu .hint{position:absolute;top:32%;left:0;right:0;text-align:center;font-size:12px;color:rgba(232,244,255,.4)}
+#hud .dash{position:absolute;left:50%;bottom:calc(2px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(48vw,280px);pointer-events:none;transform-origin:50% 72%}
+#hud .dash svg{width:100%;display:block;filter:drop-shadow(0 0 6px rgba(0,232,255,.25))}
+#spd{position:absolute;left:0;right:0;top:36%;text-align:center;font:700 30px/1 ui-monospace,monospace;color:#fff;text-shadow:0 0 10px var(--gold)}
+#spd small{display:block;font-size:10px;letter-spacing:2px;opacity:.65;margin-top:1px}
+#air{position:absolute;left:calc(10px + env(safe-area-inset-left,0px));bottom:90px;width:12px;height:100px;border:2px solid rgba(0,232,255,.45);border-radius:8px;display:flex;align-items:flex-end;overflow:hidden;background:rgba(3,5,8,.7)}
+#airf{display:block;width:100%;height:100%;background:linear-gradient(0deg,var(--neon),#7af)}
+#fan{position:absolute;left:calc(38px + env(safe-area-inset-left,0px));bottom:100px;width:22px;height:22px;border-radius:50%;background:#0a1520;border:2px solid #234}
+#fan.on{background:var(--ok);box-shadow:0 0 12px var(--ok);border-color:var(--ok)}
+.ico{position:absolute;font-size:14px;opacity:.8}
+#routeHud{position:absolute;top:calc(44px + env(safe-area-inset-top,0px));left:0;right:0;text-align:center;font-size:12px;letter-spacing:1px;color:rgba(232,244,255,.65);text-shadow:0 0 6px #000;z-index:5;pointer-events:none}
+#routeHud b{color:var(--neon)}
+.tapzone{position:absolute;top:0;bottom:0;width:40%;z-index:4}#tapL{left:0}#tapR{right:0}#tapM{left:40%;width:20%}
+#crack{position:absolute;inset:0;width:100%;height:100%}
+#crack polyline{fill:none;stroke:#fff;stroke-width:1.6;opacity:.75;vector-effect:non-scaling-stroke}
+#tiers{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.card{pointer-events:auto;width:92px;padding:10px 4px;border-radius:14px;border:2px solid #2a3545;background:rgba(0,232,255,.05);color:var(--ink);font-size:13px;cursor:pointer}
+.card.sel{border-color:var(--ok);box-shadow:0 0 12px rgba(53,255,122,.3)}
+.card .ic{font-size:28px}
+#ad{background:rgba(0,0,0,.92);z-index:25}
+#toast{position:absolute;top:15%;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--gold);border-radius:14px;padding:8px 18px;font-size:16px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:30;white-space:nowrap}
+#toast.on{opacity:1}
+#stageBanner{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;opacity:0;transition:opacity .3s;z-index:15}
+#stageBanner.on{opacity:1}
+#stageBanner .fromto{font-size:clamp(16px,3.8vw,24px);font-weight:700}
+#stageBanner .sub{font-size:12px;color:var(--gold);margin-top:5px}
+#cityFX{position:absolute;inset:0;pointer-events:none;z-index:12;opacity:0;transition:opacity .45s;display:flex;align-items:flex-end;justify-content:center;padding-bottom:16%}
+#cityFX.on{opacity:1}
+#cityFX .skyline{display:flex;align-items:flex-end;gap:2px;height:80px;filter:drop-shadow(0 0 10px rgba(0,232,255,.3))}
+#cityFX .b{background:linear-gradient(180deg,rgba(0,232,255,.3),rgba(10,20,40,.9));border:1px solid rgba(0,232,255,.35);border-radius:2px 2px 0 0;animation:cp 2.2s ease-in-out infinite}
+@keyframes cp{0%,100%{opacity:.7}50%{opacity:1}}
+#cityFX .name{position:absolute;top:26%;left:0;right:0;text-align:center;font-size:clamp(20px,4.5vw,32px);font-weight:800;letter-spacing:2px;color:var(--neon);text-shadow:0 0 20px rgba(0,232,255,.5)}
+#cityFX .label{position:absolute;top:34%;left:0;right:0;text-align:center;font-size:12px;letter-spacing:2px;color:var(--gold);opacity:.85}
+#help{position:absolute;bottom:calc(110px + env(safe-area-inset-bottom,0px));left:0;right:0;text-align:center;font-size:11px;color:rgba(232,244,255,.35);pointer-events:none;z-index:5}
+@media(max-height:400px){.pill{font-size:12px;padding:4px 10px}.ib{width:46px;height:46px;font-size:18px}.ib.big{width:72px;height:72px;font-size:34px}#spd{font-size:22px}}
+button.pill{color:var(--ink);font-family:inherit;cursor:pointer}
+#routeHud{top:calc(50px + env(safe-area-inset-top,0px))!important}
+#prog{position:absolute;top:calc(42px + env(safe-area-inset-top,0px));left:30%;right:30%;height:4px;background:rgba(255,255,255,.18);border-radius:2px;z-index:5}
+#progf{display:block;height:100%;width:0;background:var(--gold);border-radius:2px}
+#cd{position:absolute;left:0;right:0;top:40%;text-align:center;font-size:clamp(64px,20vh,130px);font-weight:900;color:#fff;text-shadow:0 0 30px var(--gold),0 0 4px #000;pointer-events:none;opacity:0;z-index:16}
+.pop{animation:pop .7s ease-out}@keyframes pop{0%{transform:scale(2);opacity:0}25%{opacity:1}100%{transform:scale(1)}}
+.wbtn{pointer-events:auto;border:2px solid var(--neon);background:rgba(0,232,255,.1);color:var(--ink);border-radius:14px;padding:10px 16px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit}.wbtn.gold{border-color:var(--gold)}
+#bat{position:relative;height:36px;border:2px solid var(--ink);border-radius:8px;margin:12px 0 6px;overflow:hidden;background:#0a1018}
+#batf{display:block;height:100%;width:0;transition:width .6s,background .6s}
+#batv{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px;text-shadow:0 0 6px #000}
+#arrival{background:radial-gradient(ellipse at 50% 110%,rgba(255,201,77,.38),rgba(3,5,8,.55) 65%)}
+#arrival .arTop{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));left:0;right:0;text-align:center}
+#arrival .arFlag{font-size:13px;letter-spacing:4px;color:var(--gold);opacity:0;animation:fi .5s .2s forwards}
+#arrival .arCity{font-size:clamp(26px,7vh,44px);font-weight:900;letter-spacing:3px;color:#fff;text-shadow:0 0 24px var(--gold);animation:pop .8s .3s both}
+#arrival .arSub{font-size:13px;opacity:0;animation:fi .5s .8s forwards}
+#arSk{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:flex-end;justify-content:center;gap:3px}
+#arSk .b{background-image:repeating-linear-gradient(0deg,transparent 0 8px,rgba(255,236,170,.6) 8px 10px),linear-gradient(180deg,rgba(255,201,77,.4),rgba(8,14,28,.96) 75%);border:1px solid rgba(255,201,77,.5);border-radius:2px 2px 0 0;transform-origin:bottom;animation:rise .7s cubic-bezier(.2,.9,.3,1.1) both,glw 2.4s ease-in-out infinite}
+@keyframes rise{from{transform:scaleY(0);opacity:0}to{transform:scaleY(1);opacity:1}}
+@keyframes glw{0%,100%{filter:brightness(.8)}50%{filter:brightness(1.3)}}
+#arrival .panel{top:47%;opacity:0;animation:fi .5s 1.3s forwards}
+.wbtn.sel{border-color:var(--ok);box-shadow:0 0 12px rgba(53,255,122,.35)}
+#citems,#ladder{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.card .ic svg{width:64px;height:28px;display:block;margin:0 auto}
+.sw{width:34px;height:34px;border-radius:50%;margin:6px auto;border:2px solid rgba(255,255,255,.5)}
+#fbar{height:10px;border:1px solid var(--gold);border-radius:6px;margin:8px 0;overflow:hidden}
+#fbarf{display:block;height:100%;width:0;background:var(--gold)}
+#wrb{position:absolute;right:calc(12px + env(safe-area-inset-right,0px));bottom:150px;width:52px;height:52px;font-size:22px;z-index:6}
+#thb{position:absolute;right:calc(14px + env(safe-area-inset-right,0px));bottom:62px;width:78px;height:78px;font-size:34px;z-index:6}
+#rlb{position:absolute;right:calc(104px + env(safe-area-inset-right,0px));bottom:70px;width:56px;height:56px;font-size:24px;z-index:6}
+#bsb{position:absolute;bottom:62px;z-index:6}
+</style>
+</head><body>
+<div id="stage">
+<div id="glass"></div><div id="gas"></div>
+
+<div id="splash" class="layer on">
+  <svg class="logo" viewBox="0 0 320 110"><defs>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00e8ff"/><stop offset="50%" stop-color="#7af"/><stop offset="100%" stop-color="#ffc94d"/>
+    </linearGradient></defs>
+    <path class="wf-fill" d="M20 78 L55 68 L95 42 L155 32 L215 38 L255 58 L295 68 L300 82 L20 82 Z"/>
+    <polyline class="wf" points="20,78 55,68 95,42 155,32 215,38 255,58 295,68 300,82 20,82"/>
+    <polyline class="wf" points="95,42 120,58 230,58 255,58"/>
+    <circle class="wf" cx="80" cy="82" r="13"/><circle class="wf" cx="245" cy="82" r="13"/>
+    <polyline class="wf" points="60,70 100,55 200,55 250,65" style="stroke:url(#g1);stroke-width:1.5;opacity:.7"/>
+  </svg>
+  <div class="tag">ROADSTER · LOOP</div>
+</div>
+
+<div id="menu" class="layer">
+  <div class="title">ROADSTER</div>
+  <div class="route" id="menuRoute">Pretoria → Kingston</div>
+  <div class="hint" data-i="hint"></div>
+  <div class="top">
+    <div class="pill">🔋 <b class="mv">0</b></div>
+    <div class="pill" id="tb">I</div><button class="pill" id="chgp" type="button">⚡ <b id="chgv">100</b>%</button><button class="pill" id="lgb" type="button">🌐 EN</button>
+    <button class="ib" style="width:40px;height:40px;font-size:17px" id="bt" type="button">🏆</button>
+  </div>
+  <div class="row">
+    <button class="ib" id="bu" type="button">⬆️</button><button class="ib" id="bc" type="button">🎨</button>
+    <button class="ib big" id="bs" type="button">🚀</button>
+    <button class="ib" id="bf" type="button">🤝</button><button class="ib" id="bq" type="button">📋</button>
+  </div>
+</div>
+
+<div id="hud" class="layer">
+  <div class="top">
+    <div class="pill">📏 <b id="sc">0</b></div>
+    <div class="pill" id="bn">⚡ 100%</div><div class="pill">LV <b id="lv">1</b></div><div class="pill" id="mu" style="color:var(--gold)">×2</div>
+  </div>
+  <div id="routeHud"><b id="cityFrom">Pretoria</b> → <span id="cityTo">Kingston</span> · <b id="kmv">0</b>/450 <span data-i="km"></span></div><div id="prog"><i id="progf"></i></div>
+  <div id="air"><i id="airf"></i></div>
+  <div class="ico" style="left:calc(8px + env(safe-area-inset-left,0px));bottom:200px">💨</div>
+  <div id="fan"></div>
+  <div class="ico" style="left:calc(38px + env(safe-area-inset-left,0px));bottom:128px">🌀</div>
+  <div class="dash">
+    <svg viewBox="0 0 280 100">
+      <defs><linearGradient id="dg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="rgba(8,14,24,.95)"/><stop offset="100%" stop-color="rgba(4,8,14,.98)"/>
+      </linearGradient></defs>
+      <path d="M14 6 L14 52 Q14 88 52 88 L228 88 Q266 88 266 52 L266 6" fill="url(#dg)" stroke="var(--yoke)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 8 L24 52 Q24 78 52 78 L228 78 Q256 78 256 52 L256 8" fill="none" stroke="var(--gold)" stroke-width="1.6" opacity=".85"/>
+      <rect x="95" y="28" width="90" height="42" rx="8" fill="rgba(0,20,30,.7)" stroke="rgba(0,232,255,.3)" stroke-width="1.5"/>
+    </svg>
+    <div id="spd">0<small>KM/H</small></div>
+  </div>
+  <button class="ib" id="wrb" type="button">🧲</button><button class="ib" id="thb" type="button" style="display:none">✈️</button><button class="ib" id="bsb" type="button" style="display:none">🔥</button><button class="ib" id="rlb" type="button" style="display:none">🔄</button><div id="cd"></div><div id="help"></div>
+  <div class="tapzone" id="tapL"></div>
+  <div class="tapzone" id="tapR"></div><div class="tapzone" id="tapM"></div>
+</div>
+
+<div id="cityFX">
+  <div class="name" id="cityName">PRETORIA</div>
+  <div class="label" id="cityLabel">START</div>
+  <div class="skyline" id="skyline"></div>
+</div>
+<div id="stageBanner">
+  <div class="fromto" id="sbText">Pretoria → Kingston</div>
+  <div class="sub" id="sbSub"></div>
+</div>
+
+<div id="crash" class="layer">
+  <svg id="crack" viewBox="0 0 100 100" preserveAspectRatio="none">
+    <polyline points="55,40 30,8"/><polyline points="55,40 92,18"/><polyline points="55,40 99,56"/>
+    <polyline points="55,40 72,98"/><polyline points="55,40 18,72"/><polyline points="55,40 1,44"/><polyline points="55,40 38,99"/>
+  </svg>
+  <div class="panel">
+    <div>📏 <b id="rm">0</b></div>
+    <div>+<b id="rg">0</b> 🔋</div><div>⚡ <b id="rb">0</b>%</div>
+    <div id="nr">🏆 🆕</div>
+    <div class="row">
+      <button class="ib" id="br" type="button">↻</button>
+      <button class="ib" id="bh" type="button">🏠</button><button class="ib" id="brv" type="button">❤️</button><button class="ib" id="bx2" type="button"><span style="font-size:14px;font-weight:800">📺×2</span></button><button class="ib" id="bsh" type="button">📤</button>
+    </div>
+  </div>
+</div>
+
+<div id="shop" class="layer">
+  <div class="top">
+    <button class="ib" style="width:40px;height:40px;font-size:17px" id="sb" type="button">⬅️</button>
+    <div class="pill">🔋 <b class="mv">0</b></div>
+  </div>
+  <div class="panel" style="width:min(90vw,380px)">
+    <div id="tiers"></div><div id="tierInfo" style="font-size:12px;opacity:.9;margin-top:10px;line-height:1.45"></div>
+    <div class="row">
+      <button class="ib" id="sad" type="button">🎁</button>
+      <button class="ib" id="sst" type="button">🎨</button>
+    </div>
+    <div style="margin-top:10px;font-size:12px;opacity:.55">🎁 📺 → 🤖 40<span data-i="sec"></span></div><button class="pill" id="sdbg" type="button" style="margin-top:8px;font-size:15px;border-color:var(--gold)">⭐ 1 → +1 000 🔋</button><button class="pill" id="sdbg2" type="button" style="display:none;margin:6px 0 0 6px;font-size:12px;border-color:var(--gold)">🧪 +100000</button>
+  </div>
+</div>
+
+<div id="station" class="layer">
+  <div class="top"><button class="ib" style="width:40px;height:40px;font-size:17px" id="stb" type="button">⬅️</button><div class="pill">🔋 <b class="mv">0</b></div></div>
+  <div class="panel" style="width:min(92vw,420px)">
+    <div style="font-size:16px;opacity:.85">🔌 <span data-i="stT"></span></div>
+    <div id="bat"><i id="batf"></i><b id="batv">0%</b></div>
+    <div id="batT" style="font-size:12px;opacity:.65"></div>
+    <div class="row"><button class="wbtn" id="ch1" type="button">📺 +50%</button><button class="wbtn gold" id="chS" type="button">⭐ 100%</button><button class="ib" id="stGo" type="button" style="display:none;width:72px;height:72px;font-size:32px">▶</button></div>
+    <div style="font-size:12px;opacity:.55;margin-top:8px">⏱ 2:00 = 100% · 📺 ×1 = 50% · ⭐ 1 = 100%<br><span data-i="stN"></span></div>
+  </div>
+</div>
+<div id="arrival" class="layer">
+  <div class="arTop"><div class="arFlag">🏁 <span data-i="fin"></span></div><div class="arCity" id="arCity"></div><div class="arSub" id="arSub"></div></div>
+  <div id="arSk"></div>
+  <div class="panel"><div id="arStats" style="font-size:17px"></div><div id="arNext" style="font-size:13px;opacity:.7;margin-top:6px"></div>
+    <div class="row"><button class="ib big" id="arGo" type="button" style="width:72px;height:72px;font-size:32px">▶</button><button class="ib" id="arHome" type="button">🏠</button><button class="ib" id="arSh" type="button">📤</button></div></div>
+</div>
+<div id="custom" class="layer">
+  <div class="top"><button class="ib" style="width:40px;height:40px;font-size:17px" id="cb" type="button">⬅️</button><div class="pill">🔋 <b class="mv">0</b></div></div>
+  <div class="panel" style="width:min(94vw,500px)">
+    <div><button class="wbtn" id="ct_body" type="button">🎨</button> <button class="wbtn" id="ct_yoke" type="button">🕹️</button> <button class="wbtn" id="ct_neon" type="button">💡</button></div>
+    <div id="citems"></div>
+    <div style="font-size:12px;opacity:.55;margin-top:8px">🔋 · 📺 · ⭐ Telegram Stars</div>
+  </div>
+</div>
+<div id="friends" class="layer">
+  <div class="top"><button class="ib" style="width:40px;height:40px;font-size:17px" id="fb" type="button">⬅️</button><div class="pill">🔋 <b class="mv">0</b></div></div>
+  <div class="panel" style="width:min(94vw,520px);padding:14px 18px">
+    <div style="font-size:16px">🤝 <span data-i="fr"></span> · <b id="fcnt">0</b>/10</div>
+    <div id="fbar"><i id="fbarf"></i></div>
+    <div id="ladder"></div>
+    <div class="row" style="margin-top:10px"><button class="wbtn gold" id="fshare" type="button">📤 <span data-i="inv"></span></button><button class="wbtn" id="fcopy" type="button">📋 <span data-i="lnk"></span></button><button class="wbtn" id="chb" type="button" style="display:none">📢 +5 000 🔋</button></div>
+    <div style="font-size:12px;opacity:.55;margin-top:6px"><span data-i="frN"></span></div>
+  </div>
+</div>
+<div id="ad" class="layer"><div class="panel">▶ <b id="adn">3</b></div></div>
+<div id="toast"></div>
+</div>
+
+<script>
+'use strict';
+(function(){
+if(typeof THREE==='undefined'){document.body.innerHTML='<p style="padding:24px;color:#fff">⚠️ Internet ✖</p>';return}
+
+var $=function(id){return document.getElementById(id)};
+/* ===== НАСТРОЙКИ (меняйте только здесь) ===== */
+var DEBUG=false;             // true — тест (реклама и Stars — бесплатные заглушки). Для выпуска: false
+var APP_LINK='https://t.me/RoadsterLoopGameBot'; // ссылка на игру: https://t.me/ИМЯ_БОТА или https://t.me/ИМЯ_БОТА/короткое_имя
+var SERVER_URL='';          // адрес вашего сервера (Cloudflare Worker), например https://roadster.ваше-имя.workers.dev
+var ADSGRAM_BLOCK='';       // номер рекламного блока из partner.adsgram.ai
+var CHANNEL='';
+var START_GIFT=0;           // стартовый подарок миль (0 — игра начинается с нуля)             // ваш канал без @, например RoadsterLoopNews
+/* ============================================= */
+var LT={};
+LT.en={hint:'tap left / right: change lane',h1:'◀ lane | 🧲 wall (center / button) | lane ▶',h2:'◀ lane | 🔥 hold: booster · 🧲 wall | lane ▶',h3:'◀ lane | ✈️ hold: fly · 🔥 booster · 🔄 roll · 🧲 | lane ▶',km:'km',kmh:'km/h',m:'m',sec:'s',start:'START',fin:'FINISH',soon:'soon',rec:'record',ap:'autopilot',apn:'next run',apo:'off',copied:'link copied',needchg:'charge needed',no:'not enough',full:'fully charged',regen:'+25% in',next:'Next:',stT:'Tesla charging station',stN:'Wait 2 minutes, watch 2 ads, or pay 1 ⭐ for instant charge',fr:'Friends',inv:'Invite',lnk:'Link',frN:'Your friend gets 🔋 3 000 + ⚡ 50%',gold:'gold',sh1:'Beat my record!',sh2:'🚀 Roadster Loop — race through the tunnel! Join: 🔋 3 000 and ⚡ 50% gift',day:'day',noad:'no ads now',chk:'check',i1:'AWD · drives briefly on tunnel walls and ceiling',i2:'SpaceX cold-gas thrusters: 🔥 booster · 🧲 walls',i3:'Tanks and nozzles: ✈️ 5 s flight, 🔄 roll, 🔥 booster · 🧲 walls'};
+LT.ru={hint:'тап слева / справа — смена полосы',h1:'◀ полоса | 🧲 стена (центр / кнопка) | полоса ▶',h2:'◀ полоса | 🔥 держи — ускоритель · 🧲 стена | полоса ▶',h3:'◀ полоса | ✈️ держи — полёт · 🔥 ускоритель · 🔄 бочка · 🧲 | полоса ▶',km:'км',kmh:'км/ч',m:'м',sec:'с',start:'СТАРТ',fin:'ФИНИШ',soon:'скоро',rec:'рекорд',ap:'автопилот',apn:'в следующем заезде',apo:'выкл',copied:'ссылка скопирована',needchg:'нужен заряд',no:'не хватает',full:'полный заряд',regen:'+25% через',next:'Дальше:',stT:'Зарядная станция Tesla',stN:'Подождите 2 минуты, посмотрите 2 рекламы или заплатите 1 ⭐ за мгновенную зарядку',fr:'Друзья',inv:'Пригласить',lnk:'Ссылка',frN:'Друг получает 🔋 3 000 + ⚡ 50%',gold:'золото',sh1:'Побей мой рекорд!',sh2:'🚀 Roadster Loop — гонка в тоннеле! Заходи: 🔋 3 000 и ⚡ 50% в подарок',day:'день',noad:'нет рекламы',chk:'проверить',i1:'полный привод · коротко едет по стенам и потолку тоннеля',i2:'микродвигатели SpaceX на холодном газе: 🔥 ускоритель · 🧲 стены',i3:'баллоны и сопла: ✈️ полёт 5 с, 🔄 бочка, 🔥 ускоритель · 🧲 стены'};
+LT.uk={hint:'тап ліворуч / праворуч — зміна смуги',h1:'◀ смуга | 🧲 стіна (центр / кнопка) | смуга ▶',h2:'◀ смуга | 🔥 утримуй — прискорювач · 🧲 стіна | смуга ▶',h3:'◀ смуга | ✈️ утримуй — політ · 🔥 прискорювач · 🔄 бочка · 🧲 | смуга ▶',km:'км',kmh:'км/год',m:'м',sec:'с',start:'СТАРТ',fin:'ФІНІШ',soon:'скоро',rec:'рекорд',ap:'автопілот',apn:'у наступному заїзді',apo:'вимк',copied:'посилання скопійовано',needchg:'потрібен заряд',no:'не вистачає',full:'повний заряд',regen:'+25% через',next:'Далі:',stT:'Зарядна станція Tesla',stN:'Зачекайте 2 хвилини, перегляньте 2 реклами або заплатіть 1 ⭐ за миттєву зарядку',fr:'Друзі',inv:'Запросити',lnk:'Посилання',frN:'Друг отримує 🔋 3 000 + ⚡ 50%',gold:'золото',sh1:'Побий мій рекорд!',sh2:'🚀 Roadster Loop — перегони в тунелі! Приєднуйся: 🔋 3 000 і ⚡ 50% у подарунок',day:'день',noad:'немає реклами',chk:'перевірити',i1:'повний привід · недовго їде по стінах і стелі тунелю',i2:'мікродвигуни SpaceX на холодному газі: 🔥 прискорювач · 🧲 стіни',i3:'балони й сопла: ✈️ політ 5 с, 🔄 бочка, 🔥 прискорювач · 🧲 стіни'};
+LT.es={hint:'toca izquierda / derecha: cambiar de carril',h1:'◀ carril | 🧲 pared (centro / botón) | carril ▶',h2:'◀ carril | 🔥 mantén: acelerador · 🧲 pared | carril ▶',h3:'◀ carril | ✈️ mantén: volar · 🔥 acelerador · 🔄 giro · 🧲 | carril ▶',km:'km',kmh:'km/h',m:'m',sec:'s',start:'SALIDA',fin:'META',soon:'pronto',rec:'récord',ap:'piloto automático',apn:'en la próxima carrera',apo:'apagado',copied:'enlace copiado',needchg:'falta carga',no:'no alcanza',full:'carga completa',regen:'+25% en',next:'Siguiente:',stT:'Estación de carga Tesla',stN:'Espera 2 minutos, mira 2 anuncios o paga 1 ⭐ por carga instantánea',fr:'Amigos',inv:'Invitar',lnk:'Enlace',frN:'Tu amigo recibe 🔋 3 000 + ⚡ 50%',gold:'oro',sh1:'¡Supera mi récord!',sh2:'🚀 Roadster Loop: ¡carrera en el túnel! Únete: 🔋 3 000 y ⚡ 50% de regalo',day:'día',noad:'sin anuncios',chk:'comprobar',i1:'tracción total · avanza un rato por paredes y techo del túnel',i2:'propulsores de gas frío SpaceX: 🔥 acelerador · 🧲 paredes',i3:'tanques y toberas: ✈️ vuelo 5 s, 🔄 giro, 🔥 acelerador · 🧲 paredes'};
+LT.pt={hint:'toque esquerda / direita: trocar de faixa',h1:'◀ faixa | 🧲 parede (centro / botão) | faixa ▶',h2:'◀ faixa | 🔥 segure: acelerador · 🧲 parede | faixa ▶',h3:'◀ faixa | ✈️ segure: voar · 🔥 acelerador · 🔄 giro · 🧲 | faixa ▶',km:'km',kmh:'km/h',m:'m',sec:'s',start:'LARGADA',fin:'CHEGADA',soon:'em breve',rec:'recorde',ap:'piloto automático',apn:'na próxima corrida',apo:'desligado',copied:'link copiado',needchg:'precisa de carga',no:'insuficiente',full:'carga completa',regen:'+25% em',next:'Próximo:',stT:'Estação de recarga Tesla',stN:'Espere 2 minutos, veja 2 anúncios ou pague 1 ⭐ para carga instantânea',fr:'Amigos',inv:'Convidar',lnk:'Link',frN:'Seu amigo ganha 🔋 3 000 + ⚡ 50%',gold:'ouro',sh1:'Bata meu recorde!',sh2:'🚀 Roadster Loop — corrida no túnel! Entre: 🔋 3 000 e ⚡ 50% de presente',day:'dia',noad:'sem anúncios',chk:'verificar',i1:'tração integral · anda por pouco tempo nas paredes e no teto do túnel',i2:'propulsores a gás frio SpaceX: 🔥 acelerador · 🧲 paredes',i3:'tanques e bocais: ✈️ voo de 5 s, 🔄 giro, 🔥 acelerador · 🧲 paredes'};
+LT.de={hint:'links / rechts tippen: Spur wechseln',h1:'◀ Spur | 🧲 Wand (Mitte / Knopf) | Spur ▶',h2:'◀ Spur | 🔥 halten: Booster · 🧲 Wand | Spur ▶',h3:'◀ Spur | ✈️ halten: fliegen · 🔥 Booster · 🔄 Rolle · 🧲 | Spur ▶',km:'km',kmh:'km/h',m:'m',sec:'s',start:'START',fin:'ZIEL',soon:'bald',rec:'Rekord',ap:'Autopilot',apn:'im nächsten Lauf',apo:'aus',copied:'Link kopiert',needchg:'Ladung nötig',no:'nicht genug',full:'voll geladen',regen:'+25% in',next:'Weiter:',stT:'Tesla-Ladestation',stN:'Warte 2 Minuten, sieh 2 Werbevideos oder zahle 1 ⭐ für sofortiges Laden',fr:'Freunde',inv:'Einladen',lnk:'Link',frN:'Dein Freund erhält 🔋 3 000 + ⚡ 50%',gold:'Gold',sh1:'Schlag meinen Rekord!',sh2:'🚀 Roadster Loop — Rennen im Tunnel! Mach mit: 🔋 3 000 und ⚡ 50% Geschenk',day:'Tag',noad:'keine Werbung',chk:'prüfen',i1:'Allrad · fährt kurz an Tunnelwänden und Decke',i2:'SpaceX-Kaltgasdüsen: 🔥 Booster · 🧲 Wände',i3:'Tanks und Düsen: ✈️ 5 s Flug, 🔄 Rolle, 🔥 Booster · 🧲 Wände'};
+LT.fr={hint:'touchez gauche / droite : changer de voie',h1:'◀ voie | 🧲 mur (centre / bouton) | voie ▶',h2:'◀ voie | 🔥 maintenir : booster · 🧲 mur | voie ▶',h3:'◀ voie | ✈️ maintenir : voler · 🔥 booster · 🔄 tonneau · 🧲 | voie ▶',km:'km',kmh:'km/h',m:'m',sec:'s',start:'DÉPART',fin:'ARRIVÉE',soon:'bientôt',rec:'record',ap:'pilote auto',apn:'à la prochaine course',apo:'désactivé',copied:'lien copié',needchg:'recharge nécessaire',no:'insuffisant',full:'charge complète',regen:'+25% dans',next:'Suite :',stT:'Station de recharge Tesla',stN:'Attendez 2 minutes, regardez 2 pubs ou payez 1 ⭐ pour une charge instantanée',fr:'Amis',inv:'Inviter',lnk:'Lien',frN:'Votre ami reçoit 🔋 3 000 + ⚡ 50 %',gold:'or',sh1:'Bats mon record !',sh2:'🚀 Roadster Loop — course dans le tunnel ! Rejoins-nous : 🔋 3 000 et ⚡ 50 % offerts',day:'jour',noad:'pas de pub',chk:'vérifier',i1:'transmission intégrale · roule brièvement sur les murs et le plafond',i2:'propulseurs à gaz froid SpaceX : 🔥 booster · 🧲 murs',i3:'réservoirs et tuyères : ✈️ vol de 5 s, 🔄 tonneau, 🔥 booster · 🧲 murs'};
+LT.tr={hint:'sola / sağa dokun: şerit değiştir',h1:'◀ şerit | 🧲 duvar (orta / düğme) | şerit ▶',h2:'◀ şerit | 🔥 basılı tut: hızlandırıcı · 🧲 duvar | şerit ▶',h3:'◀ şerit | ✈️ basılı tut: uç · 🔥 hızlandırıcı · 🔄 takla · 🧲 | şerit ▶',km:'km',kmh:'km/sa',m:'m',sec:'sn',start:'BAŞLA',fin:'BİTİŞ',soon:'yakında',rec:'rekor',ap:'otopilot',apn:'sonraki yarışta',apo:'kapalı',copied:'bağlantı kopyalandı',needchg:'şarj gerekli',no:'yetersiz',full:'tam şarj',regen:'+25% için',next:'Sıradaki:',stT:'Tesla şarj istasyonu',stN:'2 dakika bekle, 2 reklam izle ya da anında şarj için 1 ⭐ öde',fr:'Arkadaşlar',inv:'Davet et',lnk:'Bağlantı',frN:'Arkadaşın 🔋 3 000 + ⚡ %50 alır',gold:'altın',sh1:'Rekorumu geç!',sh2:'🚀 Roadster Loop — tünelde yarış! Katıl: 🔋 3 000 ve ⚡ %50 hediye',day:'gün',noad:'reklam yok',chk:'kontrol',i1:'dört çeker · tünel duvarında ve tavanda kısa süre gider',i2:'SpaceX soğuk gaz iticileri: 🔥 hızlandırıcı · 🧲 duvarlar',i3:'tanklar ve nozullar: ✈️ 5 sn uçuş, 🔄 takla, 🔥 hızlandırıcı · 🧲 duvarlar'};
+LT.id={hint:'ketuk kiri / kanan: pindah jalur',h1:'◀ jalur | 🧲 dinding (tengah / tombol) | jalur ▶',h2:'◀ jalur | 🔥 tahan: booster · 🧲 dinding | jalur ▶',h3:'◀ jalur | ✈️ tahan: terbang · 🔥 booster · 🔄 putar · 🧲 | jalur ▶',km:'km',kmh:'km/jam',m:'m',sec:'dtk',start:'MULAI',fin:'FINIS',soon:'segera',rec:'rekor',ap:'autopilot',apn:'di balapan berikutnya',apo:'mati',copied:'tautan disalin',needchg:'butuh daya',no:'tidak cukup',full:'daya penuh',regen:'+25% dalam',next:'Berikutnya:',stT:'Stasiun pengisian Tesla',stN:'Tunggu 2 menit, tonton 2 iklan, atau bayar 1 ⭐ untuk pengisian instan',fr:'Teman',inv:'Undang',lnk:'Tautan',frN:'Temanmu mendapat 🔋 3 000 + ⚡ 50%',gold:'emas',sh1:'Kalahkan rekorku!',sh2:'🚀 Roadster Loop — balapan di terowongan! Gabung: 🔋 3 000 dan ⚡ 50% hadiah',day:'hari',noad:'tidak ada iklan',chk:'cek',i1:'penggerak semua roda · melaju singkat di dinding dan langit-langit terowongan',i2:'pendorong gas dingin SpaceX: 🔥 booster · 🧲 dinding',i3:'tangki dan nozel: ✈️ terbang 5 dtk, 🔄 putar, 🔥 booster · 🧲 dinding'};
+LT.ar={hint:'اضغط يسار / يمين لتغيير المسار',h1:'◀ مسار | 🧲 جدار (المنتصف / زر) | مسار ▶',h2:'◀ مسار | 🔥 اضغط مطولاً: معزّز · 🧲 جدار | مسار ▶',h3:'◀ مسار | ✈️ اضغط مطولاً: طيران · 🔥 معزّز · 🔄 دوران · 🧲 | مسار ▶',km:'كم',kmh:'كم/س',m:'م',sec:'ث',start:'انطلاق',fin:'النهاية',soon:'قريباً',rec:'الرقم القياسي',ap:'القيادة الآلية',apn:'في السباق القادم',apo:'متوقفة',copied:'تم نسخ الرابط',needchg:'الشحن مطلوب',no:'غير كافٍ',full:'شحن كامل',regen:'+25% خلال',next:'التالي:',stT:'محطة شحن تسلا',stN:'انتظر دقيقتين أو شاهد إعلانين أو ادفع 1 ⭐ لشحن فوري',fr:'الأصدقاء',inv:'دعوة',lnk:'الرابط',frN:'صديقك يحصل على 🔋 3 000 + ⚡ 50%',gold:'ذهبي',sh1:'تحدَّ رقمي القياسي!',sh2:'🚀 Roadster Loop — سباق داخل النفق! انضم: 🔋 3 000 و ⚡ 50% هدية',day:'يوم',noad:'لا توجد إعلانات',chk:'تحقق',i1:'دفع رباعي · يسير لفترة قصيرة على جدران النفق وسقفه',i2:'دافعات غاز بارد من SpaceX: 🔥 معزّز · 🧲 جدران',i3:'خزانات وفوهات: ✈️ طيران 5 ث، 🔄 دوران، 🔥 معزّز · 🧲 جدران'};
+var CN=['Pretoria','Kingston','Philadelphia','Los Angeles','Boca Chica','McGregor','SpaceX'];
+var CITYL={en:['Pretoria','Kingston','Philadelphia','Los Angeles','Boca Chica','McGregor','SpaceX Test Site'],ru:['Претория','Кингстон','Филадельфия','Лос-Анджелес','Бока-Чика','Мак-Грегор','Полигон SpaceX'],uk:['Преторія','Кінгстон','Філадельфія','Лос-Анджелес','Бока-Чика','Мак-Грегор','Полігон SpaceX'],es:['Pretoria','Kingston','Filadelfia','Los Ángeles','Boca Chica','McGregor','Base SpaceX'],pt:['Pretória','Kingston','Filadélfia','Los Angeles','Boca Chica','McGregor','Base SpaceX'],de:['Pretoria','Kingston','Philadelphia','Los Angeles','Boca Chica','McGregor','SpaceX-Testgelände'],fr:['Pretoria','Kingston','Philadelphie','Los Angeles','Boca Chica','McGregor','Site SpaceX'],tr:['Pretoria','Kingston','Filadelfiya','Los Angeles','Boca Chica','McGregor','SpaceX Test Alanı'],id:['Pretoria','Kingston','Philadelphia','Los Angeles','Boca Chica','McGregor','Lokasi SpaceX'],ar:['بريتوريا','كينغستون','فيلادلفيا','لوس أنجلوس','بوكا تشيكا','ماكغريغور','موقع SpaceX']};
+var LANGS=['en','ru','uk','es','pt','de','fr','tr','id','ar'],lang='en';
+var ALIAS={be:'ru',kk:'ru',ky:'ru',tg:'ru',hy:'ru',uz:'ru',az:'tr',ms:'id'};
+function t(k){return (LT[lang]&&LT[lang][k])||LT.en[k]||k}
+function cn(n){var i=CN.indexOf(n);return i<0?n:(CITYL[lang]||CITYL.en)[i]}
+function detectLang(){
+  if(S.lang&&LT[S.lang])return S.lang;
+  var c='';try{c=(TG&&TG.initDataUnsafe&&TG.initDataUnsafe.user&&TG.initDataUnsafe.user.language_code)||navigator.language||''}catch(e){}
+  c=String(c).toLowerCase().split(/[-_]/)[0];c=ALIAS[c]||c;return LT[c]?c:'en'}
+function applyLang(){
+  document.querySelectorAll('[data-i]').forEach(function(e){e.innerHTML=t(e.getAttribute('data-i'))});
+  try{document.documentElement.lang=lang}catch(e){}
+  $('lgb').textContent='🌐 '+lang.toUpperCase();refresh()}
+
+var TG=window.Telegram&&window.Telegram.WebApp;
+var TIERS=[{t100:1.5,cost:0},{t100:.85,cost:50000},{t100:.55,cost:250000}];
+var BOOSTK=230,MAXK=230, KEY='roadster_loop_v3';
+var S={v:0,miles:0,owned:1,tier:1,best:0,skin:0,id:0,name:'guest',stage:0,chg:100,chgT:Date.now(),lvl:0,chgDone:0,own:{},eq:{body:'white',yoke:'white',neon:'cyan'},adc:{},refCount:0,refClaimed:{},refBy:0};
+/* каталог: [имя, цвет, цена]. цена: 0 — бесплатно, m — миль, a — просмотров рекламы, s — звёзд */
+var CAT={
+ body:[['white','#f4f6fa',0],['silver','#c3c9d3',{m:3000}],['graph','#2c333d',{m:8000}],['red','#c4162a',{a:3}],['gold','#d4a62a',{s:10}]],
+ yoke:[['white','#eef0f4',0],['gold','#ffc94d',{m:3000}],['carbon','#4a505c',{a:2}],['cyan','#00e8ff',{s:5}]],
+ neon:[['cyan','#00e8ff',0],['mag','#ff3bd4',{m:4000}],['lime','#35ff7a',{a:2}],['gold','#ffc94d',{s:8}]]
+};
+var ROUTES=[
+  {from:'Pretoria',to:'Kingston',wallRide:true,len:8500},
+  {from:'Kingston',to:'Philadelphia',wallRide:false,len:9000},
+  {from:'Philadelphia',to:'Los Angeles',wallRide:false,len:9500},
+  {from:'Los Angeles',to:'Boca Chica',wallRide:false,len:10000},
+  {from:'Boca Chica',to:'McGregor',wallRide:false,len:10500},
+  {from:'McGregor',to:'SpaceX',wallRide:false,len:11000}
+];
+var boostId=-1,wrCool=0,wrT=0,wrDir=1,puffT=0,cd=0,cdN=0,goT=0,pendingAuto=0,lastGain=0,revived=false,doubled=false,reviveUntil=0;
+
+function save(){
+  S.v++;var s=JSON.stringify(S);
+  try{localStorage.setItem(KEY,s)}catch(e){}
+  try{if(TG&&TG.CloudStorage)TG.CloudStorage.setItem(KEY,s,function(){})}catch(e){}
+}
+function load(cb){
+  var done=false,fin=function(){if(!done){done=true;cb()}};
+  try{var s=localStorage.getItem(KEY);if(s)Object.assign(S,JSON.parse(s))}catch(e){}
+  try{
+    if(TG&&TG.CloudStorage){
+      setTimeout(fin,1200);
+      TG.CloudStorage.getItem(KEY,function(err,v){
+        try{if(!err&&v){var c=JSON.parse(v);if(c.v>S.v)Object.assign(S,c)}}catch(e){}
+        fin();
+      });
+    }else fin();
+  }catch(e){fin()}
+}
+function tgReady(){
+  if(!TG)return;
+  try{
+    TG.ready();TG.expand();
+    if(TG.disableVerticalSwipes)TG.disableVerticalSwipes();
+    if(TG.setHeaderColor)TG.setHeaderColor('#030508');
+    if(TG.setBackgroundColor)TG.setBackgroundColor('#030508');
+    if(TG.lockOrientation)TG.lockOrientation('landscape');
+  }catch(e){}
+}
+function tgIdentity(){
+  var u=TG&&TG.initDataUnsafe&&TG.initDataUnsafe.user;
+  if(u){S.id=u.id;S.name=u.username||u.first_name||'player'}
+}
+var adCtl=null;
+function mockAd(cb){var o=$('ad');o.classList.add('on');var n=3;$('adn').textContent=n;
+  var tm=setInterval(function(){n--;$('adn').textContent=n;if(n<=0){clearInterval(tm);o.classList.remove('on');cb(true)}},900)}
+function showRewardedAd(cb){
+  try{if(ADSGRAM_BLOCK&&window.Adsgram){adCtl=adCtl||window.Adsgram.init({blockId:ADSGRAM_BLOCK});
+    adCtl.show().then(function(){cb(true)}).catch(function(){toast('📺 ✖ '+t('noad'))});return}}catch(e){}
+  if(DEBUG)mockAd(cb);else toast('📺 ✖ '+t('noad'))}
+function payStars(id,cb){
+  if(SERVER_URL&&TG&&TG.openInvoice){
+    api('/invoice',{initData:TG.initData,item:String(id).replace(/^item_/,''),lang:lang},function(x){
+      if(!x||!x.link){toast('⚠️ ⭐');return}
+      TG.openInvoice(x.link,function(st){if(st==='paid')cb(true);else if(st==='failed')toast('⚠️ ⭐')})});return}
+  if(DEBUG)cb(true);else toast('⭐ '+t('soon'))}
+
+var state='BOOT';
+var LAY={BOOT:'splash',MENU:'menu',GAMEPLAY:'hud',CRASH:'crash',UPGRADE_SHOP:'shop',CUSTOM:'custom',FRIENDS:'friends',STATION:'station',ARRIVAL:'arrival'};
+function setState(s){
+  state=s;
+  for(var k in LAY){var el=$(LAY[k]);if(el)el.classList.toggle('on',k===s)}
+  checkOrient();
+}
+var tt=0;
+function toast(s){
+  var e=$('toast');e.textContent=s;e.classList.add('on');
+  clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('on')},1700);
+}
+function fmt(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' ')}
+function refresh(){
+  regen();$('chgv').textContent=Math.floor(S.chg);
+  document.querySelectorAll('.mv').forEach(function(e){e.textContent=fmt(S.miles)});
+  $('tb').textContent='I'.repeat(S.tier);
+  applyCustom();
+  var r=ROUTES[S.stage%ROUTES.length];
+  $('menuRoute').textContent=cn(r.from)+' → '+cn(r.to)+' · LV '+((S.lvl||0)+1);
+}
+
+var AC=null,vac=null;
+function audioInit(){
+  if(AC)return;
+  try{
+    AC=new(window.AudioContext||window.webkitAudioContext)();
+    var b=AC.createBuffer(1,AC.sampleRate,AC.sampleRate),d=b.getChannelData(0);
+    for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+    var s=AC.createBufferSource();s.buffer=b;s.loop=true;
+    var f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=480;f.Q.value=1.1;
+    vac=AC.createGain();vac.gain.value=0;
+    s.connect(f);f.connect(vac);vac.connect(AC.destination);s.start();
+  }catch(e){}
+}
+function hap(t){try{TG&&TG.HapticFeedback&&TG.HapticFeedback.impactOccurred(t||'light')}catch(e){}}
+function beep(f,d,t,v){
+  if(!AC)return;
+  try{
+    var o=AC.createOscillator(),g=AC.createGain();
+    o.type=t||'sine';o.frequency.value=f;g.gain.value=v||.1;
+    g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);
+    o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d);
+  }catch(e){}
+}
+
+/* Landscape */
+var stageW=1,stageH=1,rotated=false,lastKey='',stageEl=$('stage');
+function applyStageLayout(){
+  var vw=innerWidth,vh=innerHeight;if(vw+'x'+vh===lastKey)return;lastKey=vw+'x'+vh;rotated=vw<vh;
+  if(rotated){
+    stageW=vh;stageH=vw;
+    stageEl.style.cssText='width:'+stageW+'px;height:'+stageH+'px;left:'+((vw-stageW)/2)+'px;top:'+((vh-stageH)/2)+'px;transform:rotate(90deg)';
+  }else{
+    stageW=vw;stageH=vh;
+    stageEl.style.cssText='width:100%;height:100%;left:0;top:0;transform:none';
+  }
+}
+var locked=0;function checkOrient(){applyStageLayout();if(locked++)return;try{var o=screen.orientation;if(o&&o.lock)o.lock('landscape').catch(function(){})}catch(e){}}
+function toStage(cx,cy){return rotated?{x:cy,y:stageH-cx}:{x:cx,y:cy}}
+
+/* 3D */
+var R,scene,cam;
+try{
+  R=new THREE.WebGLRenderer({antialias:false,powerPreference:'high-performance'});
+  R.setPixelRatio(Math.min(devicePixelRatio||1,2));
+  if(THREE.sRGBEncoding)R.outputEncoding=THREE.sRGBEncoding;
+  stageEl.prepend(R.domElement);
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x02040a);
+  scene.fog=new THREE.FogExp2(0x03060e,0.007);
+  cam=new THREE.PerspectiveCamera(68,1,.1,280);scene.add(cam);
+}catch(err){
+  document.body.innerHTML='<p style="padding:24px;color:#fff">⚠️ WebGL ✖<br><small>'+err.message+'</small></p>';
+  return;
+}
+function resize(){
+  if(!R||!cam)return;
+  applyStageLayout();
+  R.setSize(stageW,stageH,false);
+  cam.aspect=stageW/Math.max(1,stageH);
+  cam.fov=66;cam.updateProjectionMatrix();
+}
+resize();
+addEventListener('resize',resize);
+addEventListener('orientationchange',function(){setTimeout(resize,200)});
+
+scene.add(new THREE.HemisphereLight(0x6a90b8,0x050810,0.65));
+var sun=new THREE.DirectionalLight(0xfff0dd,0.4);sun.position.set(2,8,3);scene.add(sun);
+scene.add(new THREE.DirectionalLight(0x00c8ff,0.18).translateX(-4));
+scene.add(new THREE.AmbientLight(0x1a2230,0.3));
+
+/* Cabin */
+var cabin=new THREE.Group();cam.add(cabin);
+var bodyWhite=new THREE.MeshStandardMaterial({color:0xf4f6fa,metalness:0.4,roughness:0.38});
+var bodyDark=new THREE.MeshStandardMaterial({color:0x121820,metalness:0.65,roughness:0.28});
+var neonMat=new THREE.MeshBasicMaterial({color:0x00e8ff});
+var hood=new THREE.Mesh(new THREE.BoxGeometry(2.5,0.14,2.7),bodyWhite);hood.position.set(0,-0.9,-2.3);cabin.add(hood);
+var spine=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.04,2.3),bodyDark);spine.position.set(0,-0.82,-2.25);cabin.add(spine);
+[-1.12,1.12].forEach(function(x){var f=new THREE.Mesh(new THREE.BoxGeometry(0.32,0.2,1.7),bodyWhite);f.position.set(x,-0.86,-1.95);cabin.add(f)});
+var dash=new THREE.Mesh(new THREE.BoxGeometry(2.25,0.16,0.5),bodyDark);dash.position.set(0,-0.7,-1.32);cabin.add(dash);
+var screen=new THREE.Mesh(new THREE.BoxGeometry(0.65,0.26,0.03),neonMat);screen.position.set(0,-0.58,-1.1);cabin.add(screen);
+[-1.18,1.18].forEach(function(x){
+  var m=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.09,0.2),bodyDark);m.position.set(x,-0.55,-1.65);cabin.add(m);
+});
+var under=new THREE.Mesh(new THREE.BoxGeometry(2.1,0.03,1.8),neonMat);under.position.set(0,-0.98,-1.95);cabin.add(under);
+var cabinLight=new THREE.PointLight(0x00e8ff,0.35,10);cabinLight.position.set(0,-0.2,-1);cabin.add(cabinLight);
+
+/* Tunnel */
+var R_TUBE=12,SEG_LEN=24,SEG_N=9,tubeSegs=[],tubeRoot=new THREE.Group();scene.add(tubeRoot);
+function makeTunnelTex(){
+  var c=document.createElement('canvas');c.width=512;c.height=512;var g=c.getContext('2d');
+  g.fillStyle='#0c1420';g.fillRect(0,0,512,512);
+  for(var i=0;i<8;i++)for(var j=0;j<8;j++){
+    var x=i*64,y=j*64;
+    g.fillStyle=(i+j)%2?'#0e1824':'#0b121c';g.fillRect(x+2,y+2,60,60);
+    g.strokeStyle='rgba(40,70,100,0.65)';g.lineWidth=2;g.strokeRect(x+2,y+2,60,60);
+    g.fillStyle='rgba(80,120,160,0.4)';
+    [[8,8],[52,8],[8,52],[52,52]].forEach(function(p){g.beginPath();g.arc(x+p[0],y+p[1],2.2,0,6.3);g.fill()});
+  }
+  var tex=new THREE.CanvasTexture(c);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(8,4);return tex;
+}
+var mWall=new THREE.MeshLambertMaterial({map:makeTunnelTex(),side:THREE.BackSide,color:0xaabbcc});
+var mFloor=new THREE.MeshLambertMaterial({color:0x121a26,side:THREE.BackSide});
+var mLight=new THREE.MeshBasicMaterial({color:0xb8d8ff});
+var mGlow=new THREE.MeshBasicMaterial({color:0x00e8ff,transparent:true,opacity:0.32});
+var mRail=new THREE.MeshBasicMaterial({color:0x1a3040});
+var mLane=new THREE.MeshBasicMaterial({color:0x99aacc});
+var mEdge=new THREE.MeshBasicMaterial({color:0xc8d8e8});
+var GY=-9,ROAD_W=15.6;
+function makeRoadTex(){
+  var c=document.createElement('canvas');c.width=512;c.height=768;var g=c.getContext('2d'),pm=512/ROAD_W;
+  g.fillStyle='#161e2c';g.fillRect(0,0,512,768);
+  var x0=256-5.35*pm,w=10.7*pm;
+  g.fillStyle='#51555f';g.fillRect(x0,0,w,768);
+  for(var i=0;i<2600;i++){g.fillStyle=Math.random()<.5?'rgba(255,255,255,.06)':'rgba(0,0,0,.14)';g.fillRect(x0+Math.random()*w,Math.random()*768,2,2)}
+  g.fillStyle='#ffc94d';[-5.1,5.1].forEach(function(x){g.fillRect(256+x*pm-.09*pm,0,.18*pm,768)});
+  g.fillStyle='#f4f6fa';[-1.7,1.7].forEach(function(x){for(var z=0;z<768;z+=96)g.fillRect(256+x*pm-.07*pm,z+8,.14*pm,52)});
+  g.fillStyle='rgba(0,232,255,.9)';[-5.5,5.5].forEach(function(x){g.fillRect(256+x*pm-.04*pm,0,.08*pm,768)});
+  var t=new THREE.CanvasTexture(c);t.anisotropy=4;return t;
+}
+var mRoad=new THREE.MeshBasicMaterial({map:makeRoadTex()});
+
+function makeTubeSegment(){
+  var g=new THREE.Group();
+  var shell=new THREE.Mesh(new THREE.CylinderGeometry(R_TUBE,R_TUBE,SEG_LEN,28,1,true),mWall);
+  shell.rotation.x=Math.PI/2;g.add(shell);
+  var road=new THREE.Mesh(new THREE.BoxGeometry(ROAD_W,0.1,SEG_LEN),mRoad);road.position.y=GY-0.05;g.add(road);
+  for(var zi=-2;zi<=1;zi++){
+    var z=zi*(SEG_LEN/4)+SEG_LEN/8;
+    var fix=new THREE.Mesh(new THREE.BoxGeometry(2.3,0.12,0.5),mLight);fix.position.set(0,R_TUBE-0.22,z);g.add(fix);
+    var glow=new THREE.Mesh(new THREE.BoxGeometry(2.9,0.06,0.9),mGlow);glow.position.set(0,R_TUBE-0.36,z);g.add(glow);
+  }
+  [-1,1].forEach(function(side){
+    var rail=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.08,SEG_LEN*0.94),mRail);
+    var a=side*0.72;rail.position.set(Math.sin(a)*(R_TUBE-0.18),-Math.cos(a)*(R_TUBE-0.18),0);g.add(rail);
+  });
+  
+  return g;
+}
+for(var i=0;i<SEG_N;i++){
+  var seg=makeTubeSegment();seg.position.z=6-i*SEG_LEN;tubeRoot.add(seg);tubeSegs.push(seg);
+}
+
+var garage=new THREE.Group();
+var gShell=new THREE.Mesh(new THREE.CylinderGeometry(R_TUBE-0.15,R_TUBE-0.15,36,24,1,true),new THREE.MeshLambertMaterial({color:0x0a1018,side:THREE.BackSide}));
+gShell.rotation.x=Math.PI/2;gShell.position.z=-10;garage.add(gShell);var gWall=new THREE.Mesh(new THREE.CircleGeometry(R_TUBE-0.2,24),new THREE.MeshBasicMaterial({color:0x070b12}));gWall.position.z=-26;garage.add(gWall);
+for(i=0;i<5;i++){var L=new THREE.Mesh(new THREE.BoxGeometry(2,0.1,0.35),mLight);L.position.set(0,R_TUBE-0.3,-6-i*4);garage.add(L)}
+scene.add(garage);
+
+/* Obstacles — only on road */
+function makeTruck(){
+  var g=new THREE.Group();
+  var cab=new THREE.Mesh(new THREE.BoxGeometry(2.2,2.0,1.9),new THREE.MeshLambertMaterial({color:0x2a3548}));cab.position.set(0,1.1,-2);g.add(cab);
+  var box=new THREE.Mesh(new THREE.BoxGeometry(2.3,2.4,4.8),new THREE.MeshLambertMaterial({color:0x3a4558}));box.position.set(0,1.3,1);g.add(box);
+  g.userData={w:2.4,h:2.7,l:6.8};return g;
+}
+function makeTesla(){
+  var g=new THREE.Group();
+  var body=new THREE.Mesh(new THREE.BoxGeometry(1.95,0.7,4.0),new THREE.MeshStandardMaterial({color:0xe8eaed,metalness:0.5,roughness:0.32}));body.position.set(0,0.55,0);g.add(body);
+  var roof=new THREE.Mesh(new THREE.BoxGeometry(1.7,0.55,1.85),new THREE.MeshStandardMaterial({color:0xd0d4d8,metalness:0.45,roughness:0.35}));roof.position.set(0,1.05,-0.1);g.add(roof);
+  var light=new THREE.Mesh(new THREE.BoxGeometry(1.3,0.05,0.04),neonMat);light.position.set(0,0.7,-2);g.add(light);
+  g.userData={w:2.0,h:1.5,l:4.2};return g;
+}
+function makeBarrier(){
+  var g=new THREE.Group();
+  var b=new THREE.Mesh(new THREE.BoxGeometry(2.2,1.0,0.55),new THREE.MeshLambertMaterial({color:0xff6a1a}));b.position.set(0,0.5,0);g.add(b);
+  g.userData={w:2.3,h:1.05,l:0.75};return g;
+}
+var pools={truck:[],tesla:[],barr:[]};
+var makers={truck:makeTruck,tesla:makeTesla,barr:makeBarrier};
+Object.keys(makers).forEach(function(k){for(var i=0;i<20;i++){var m=makers[k]();m.visible=false;scene.add(m);pools[k].push(m)}});
+var act=[];
+var LANE_W=3.4;
+
+function placeOnRoad(m,lane,z){
+  m.userData.lane=lane;m.userData.lat=(lane-1)*LANE_W;
+  m.position.z=z;m.visible=true;
+}
+var lastFree=[0,1,2];
+var GAPF=[1.3,1.42,1.54,1.66,1.78,1.9],DBL=[.5,.55,.6,.65,.7,.75],PTR=[.4,.45,.5,.55,.6,.65]; // по этапам 1..6
+function dIdx(){return Math.min(5,S.lvl||0)}
+function spawnRow(){
+  var k=dIdx(),n=score>200&&Math.random()<DBL[k]?2:1,pick=null,fr=null,tries=0;
+  while(!pick&&tries++<12){
+    var bl=[0,1,2].sort(function(){return Math.random()-0.5}).slice(0,n),f=[0,1,2].filter(function(l){return bl.indexOf(l)<0});
+    // проходимость: из любой свободной полосы прошлого ряда можно перестроиться в свободную полосу нового ряда
+    if(lastFree.every(function(p){return f.some(function(q){return Math.abs(q-p)<=1})})){pick=bl;fr=f}
+  }
+  if(!pick){pick=[1];fr=[0,2]}
+  var placed=[];
+  pick.forEach(function(l){
+    var pt=PTR[k],r=Math.random(),kind=r<pt?'truck':r<pt+(1-pt)*.67?'tesla':'barr';
+    var m=pools[kind].find(function(p){return !p.visible});if(!m)return;
+    placeOnRoad(m,l,-170-Math.random()*12);act.push(m);placed.push(l);
+  });
+  lastFree=[0,1,2].filter(function(l){return placed.indexOf(l)<0});   // по факту поставленных препятствий
+}
+
+/* Game */
+var kmh=0,px=0,lane=1,y=0,vy=0,air=100,grounded=true,thrust=false,lastTap=0;
+var rolling=false,rollT=0,rollAng=0,tilt=0,steerA=0,shakeKick=0,score=0,T=0,multUntil=0,sinceRow=0,gap=47;
+var bankAng=0,bankTarget=0,wallPhase=0,stageDist=0,stageGoal=850,routeIdx=0,bannerT=0,cityT=0,autoUntil=0;
+
+function currentRoute(){return ROUTES[routeIdx%ROUTES.length]}
+function onWall(){return wallPhase>=1&&wallPhase<=3}
+function invincible(){return onWall()||T<reviveUntil||(autoUntil>0&&T<autoUntil)}
+
+function buildSkyline(){
+  var box=$('skyline');box.innerHTML='';
+  for(var i=0;i<16;i++){
+    var b=document.createElement('div');b.className='b';
+    b.style.height=(18+Math.random()*62)+'px';b.style.width=(7+Math.random()*12)+'px';
+    b.style.animationDelay=(Math.random()*2)+'s';box.appendChild(b);
+  }
+}
+function showCity(name,label,sec){
+  buildSkyline();$('cityName').textContent=String(name).toUpperCase();$('cityLabel').textContent=label;
+  $('cityFX').classList.add('on');cityT=sec||2.6;
+}
+function showBanner(text,sub,sec){
+  $('sbText').textContent=text;$('sbSub').textContent=sub||'';
+  $('stageBanner').classList.add('on');bannerT=sec||1.8;
+}
+
+function batNow(){return Math.max(0,Math.min(100,100*(1-stageDist/stageGoal)+bonusPts))}
+var bonusM=[],bonusIdx=0,bonusGot=0,bonusPts=0,bonusMark=.5;
+(function(){var g=new THREE.OctahedronGeometry(.75),mt=new THREE.MeshBasicMaterial({color:0x35ff7a});
+  for(var i=0;i<3;i++){var m=new THREE.Mesh(g,mt);m.visible=false;scene.add(m);bonusM.push(m)}})();
+function updateBonus(v,dt){
+  var ratio=stageDist/stageGoal;
+  if(bonusIdx<1&&ratio>=bonusMark){
+    var m=bonusM[bonusIdx],ln=Math.floor(Math.random()*3),x=(ln-1)*LANE_W;
+    for(var i=act.length-1;i>=0;i--){var o=act[i];if(Math.abs(o.userData.lat-x)<2&&Math.abs(o.position.z+180)<26){o.visible=false;act.splice(i,1)}}
+    m.visible=true;m.position.set(x,GY+1.3,-180);bonusIdx++}
+  for(var k=0;k<3;k++){var b=bonusM[k];if(!b.visible)continue;
+    var z0=b.position.z;b.position.z+=v*dt;b.rotation.y+=dt*3;b.rotation.x+=dt*1.5;
+    if(b.position.z>12){b.visible=false;continue}
+    if(z0<=1.8&&b.position.z>=-1.8&&Math.abs(b.position.x-px)<1.9&&y<2.8){
+      b.visible=false;bonusGot++;bonusPts=50;toast('⚡ +50%');beep(1000,.25,'sine',.12);hap('light')}}
+}
+function clearActs(){for(var i=0;i<act.length;i++)act[i].visible=false;act.length=0;for(var j=0;j<bonusM.length;j++)bonusM[j].visible=false}
+
+function startGame(){
+  clearActs();bonusIdx=0;bonusGot=0;bonusPts=0;bonusMark=.35+Math.random()*.3;lastBn=-1;MAXK=[230,250,320][S.tier-1];BOOSTK=[230,300,390][S.tier-1];boostId=-1;wrCool=0;lastFree=[0,1,2];$('lv').textContent=(S.lvl||0)+1;
+  lane=1;px=0;y=0;vy=0;air=100;grounded=true;thrust=false;
+  rolling=false;rollAng=0;tilt=0;steerA=0;kmh=0;score=0;T=0;
+  multUntil=0;sinceRow=0;gap=47;shakeKick=0;
+  bankAng=0;bankTarget=0;wallPhase=0;
+  autoUntil=pendingAuto||0;pendingAuto=0;revived=false;doubled=false;reviveUntil=0;thrustId=-1;cd=3;cdN=0;goT=0;lastKm=-1;wrT=0;var bb=$('bsb'),tb=$('thb'),rb=$('rlb');bb.style.display=S.tier>=2?'':'none';tb.style.display=S.tier>=3?'':'none';tb.textContent='✈️';rb.style.display=S.tier>=3?'':'none';bb.style.right=S.tier>=3?'104px':'14px';bb.style.width=bb.style.height=S.tier>=3?'64px':'78px';bb.style.fontSize=S.tier>=3?'28px':'34px';rb.style.right='184px';$('help').textContent=t('h'+S.tier);$('cd').style.opacity=0;
+  routeIdx=S.stage%ROUTES.length;
+  var rt=currentRoute();
+  stageDist=0;stageGoal=rt.len*(MAXK/230); // быстрее машина — длиннее этап, время то же
+  garage.visible=false;
+  $('cityFrom').textContent=cn(rt.from);$('cityTo').textContent=cn(rt.to);
+  setState('GAMEPLAY');
+  showCity(cn(rt.from),t('start'),4);
+  
+  if(autoUntil>0)setTimeout(function(){toast('🤖 '+t('ap')+' '+Math.floor(autoUntil)+t('sec'))},500);
+}
+function goHome(){
+  clearActs();kmh=0;y=0;vy=0;rollAng=0;tilt=0;bankAng=0;bankTarget=0;wallPhase=0;autoUntil=0;
+  garage.visible=true;$('cityFX').classList.remove('on');$('stageBanner').classList.remove('on');refresh();setState('MENU');
+}
+function crash(){
+  setState('CRASH');kmh=0;shakeKick=1;rolling=false;thrust=false;$('stageBanner').classList.remove('on');bannerT=0;cityT=0;
+  bankAng=0;bankTarget=0;wallPhase=0;$('cityFX').classList.remove('on');
+  beep(65,0.45,'sawtooth',0.22);
+  var g=Math.floor(score);lastGain=g;S.miles+=g;var nr=g>S.best;if(nr)S.best=g;S.chg=batNow();S.chgDone=0;startWait();$('rb').textContent=Math.floor(S.chg);save();refresh();$('brv').style.display=revived?'none':'';$('bx2').style.display=doubled?'none':'';hap('heavy');
+  $('rm').textContent=g;$('rg').textContent=g;$('nr').style.visibility=nr?'visible':'hidden';
+}
+function stageClear(){
+  var rt=currentRoute(),sc=Math.floor(score),g=sc+1000+S.stage*300;
+  S.miles+=g;if(sc>S.best)S.best=sc;
+  S.stage=(S.stage+1)%ROUTES.length;S.lvl=(S.lvl||0)+1;S.chg=batNow();S.chgDone=0;startWait();save();refresh();
+  clearActs();thrust=false;rolling=false;rollAng=0;wallPhase=0;bankAng=0;bankTarget=0;
+  $('cityFX').classList.remove('on');$('stageBanner').classList.remove('on');bannerT=0;cityT=0;
+  buildArrival(rt,g);setState('ARRIVAL');hap('medium');
+  beep(660,.12,'sine',.1);setTimeout(function(){beep(880,.15,'sine',.1)},150);setTimeout(function(){beep(1180,.25,'sine',.1)},320);
+}
+
+function steer(d){
+  if(state!=='GAMEPLAY')return;
+  if(autoUntil>0&&T<autoUntil)return; // autopilot owns steering
+  lane=Math.max(0,Math.min(2,lane+d));
+  beep(300,0.03,'square',0.03);
+}
+function rollNow(){if(state!=='GAMEPLAY'||S.tier<3||grounded||rolling||wallPhase)return;rolling=true;rollT=0;multUntil=T+4;puff(1);beep(500,.28,'sawtooth',.08)}
+function thrustOn(){
+  if(state!=='GAMEPLAY'||S.tier<2||wallPhase)return;
+  var now=performance.now();
+  if(S.tier>=3&&!grounded&&now-lastTap<280&&!rolling){
+    rolling=true;rollT=0;multUntil=T+4;
+    puff(1);
+    beep(500,0.28,'sawtooth',0.08);
+  }
+  lastTap=now;thrust=true;
+}
+
+$('tapL').addEventListener('pointerdown',function(e){e.preventDefault();audioInit();steer(-1)});
+$('tapR').addEventListener('pointerdown',function(e){e.preventDefault();audioInit();steer(1)});
+addEventListener('keydown',function(e){
+  if(e.repeat)return;audioInit();
+  if(e.code==='ArrowLeft'||e.code==='KeyA')steer(-1);
+  else if(e.code==='ArrowRight'||e.code==='KeyD')steer(1);
+  else if(e.code==='KeyB'){boostId=-2}else if(e.code==='KeyW'||e.code==='ArrowDown'){wallRide()}else if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();thrustOn();if(S.tier===1)wallRide()}
+});
+addEventListener('keyup',function(e){if(e.code==='KeyB')boostId=-1;if(e.code==='Space'||e.code==='ArrowUp')thrust=false});
+var thrustId=-1;
+$('tapM').addEventListener('pointerdown',function(e){e.preventDefault();thrustId=e.pointerId;thrustOn();if(S.tier===1)wallRide()});
+$('wrb').addEventListener('pointerdown',function(e){e.preventDefault();wallRide()});
+$('bsb').addEventListener('pointerdown',function(e){e.preventDefault();boostId=e.pointerId});
+$('thb').addEventListener('pointerdown',function(e){e.preventDefault();thrustId=e.pointerId;thrustOn()});
+$('rlb').addEventListener('pointerdown',function(e){e.preventDefault();rollNow()});
+function relT(e){if(e.pointerId===thrustId){thrust=false;thrustId=-1}if(e.pointerId===boostId)boostId=-1}
+function boostHeld(){return boostId!==-1||(S.tier===2&&thrustId!==-1)}
+addEventListener('pointerdown',audioInit);addEventListener('pointerup',relT);addEventListener('pointercancel',relT);
+addEventListener('contextmenu',function(e){e.preventDefault()});
+
+$('bs').onclick=tryStart;$('br').onclick=tryStart;$('arGo').onclick=tryStart;$('arHome').onclick=goHome;$('chgp').onclick=openStation;$('stb').onclick=goHome;$('bh').onclick=goHome;
+$('bu').onclick=function(){renderShop();setState('UPGRADE_SHOP')};
+$('sb').onclick=goHome;
+$('bq').onclick=function(){toast('📋 '+t('soon'))};
+$('bt').onclick=function(){toast('🏆 '+t('rec')+' '+fmt(S.best)+' '+t('m'))};
+$('sad').onclick=function(){
+  showRewardedAd(function(){
+    S.miles+=200;save();refresh();
+    if(state==='GAMEPLAY'){autoUntil=T+40;toast('🤖 '+t('ap')+' 40'+t('sec'))}
+    else{pendingAuto=40;toast('🤖 '+t('ap')+': '+t('apn'))}
+  });
+};
+$('sst').onclick=openCustom;$('bc').onclick=openCustom;$('cb').onclick=goHome;$('bf').onclick=function(){renderFriends();setState('FRIENDS')};$('fb').onclick=goHome;
+$('sdbg').onclick=function(){payStars('miles1000',function(ok){if(ok){S.miles+=1000;save();refresh();toast('+1 000 🔋')}})};
+$('fshare').onclick=function(){shareRef()};$('bf').addEventListener('click',function(){$('chb').style.display=(CHANNEL&&SERVER_URL&&!S.subDone)?'':'none'});$('fcopy').onclick=function(){try{navigator.clipboard.writeText(refLink()).then(function(){toast('✅ '+t('copied'))},function(){toast('📤')})}catch(e){toast('📤')}};
+['body','yoke','neon'].forEach(function(t){$('ct_'+t).onclick=function(){ctab=t;renderCustom()}});
+
+$('brv').onclick=function(){showRewardedAd(function(){revived=true;S.chg=100;S.chgDone=0;S.miles-=lastGain;clearActs();kmh=100;sinceRow=0;gap=36;shakeKick=0;reviveUntil=T+3;save();refresh();setState('GAMEPLAY');toast('🛡 3'+t('sec'))})};
+$('bx2').onclick=function(){showRewardedAd(function(){doubled=true;S.miles+=lastGain;save();refresh();$('rg').textContent=lastGain*2;$('bx2').style.display='none';$('brv').style.display='none'})};
+$('bsh').onclick=function(){var q='url='+encodeURIComponent(refLink())+'&text='+encodeURIComponent('🚀 '+fmt(Math.floor(score))+' '+t('m')+'! '+t('sh1'));var u='https://t.me/share/url?'+q;try{if(TG&&TG.openTelegramLink)TG.openTelegramLink(u);else window.open(u)}catch(e){}};
+var FULLMS=120000; // полный заряд за 2 минуты ожидания
+function regen(){var now=Date.now();if(S.chgDone){if(now>=S.chgDone){S.chg=100;S.chgDone=0}else S.chg=100-(S.chgDone-now)*100/FULLMS}}
+function startWait(){if(S.chg<100&&!S.chgDone){S.chgDone=Date.now()+(100-S.chg)*FULLMS/100;save()}}
+function giveCharge(n){regen();S.chg=Math.min(100,S.chg+n);S.chgDone=S.chg>=100?0:Date.now()+(100-S.chg)*FULLMS/100}
+function tryStart(){regen();if(S.chg<100){openStation();return}startGame()}
+function mmss(ms){ms=Math.max(0,Math.ceil(ms/1000));var m=Math.floor(ms/60),q=ms%60;return m+':'+(q<10?'0':'')+q}
+function openStation(){regen();startWait();renderStation();setState('STATION')}
+function renderStation(){regen();var c=Math.floor(S.chg),f=$('batf'),full=c>=100;
+  f.style.width=c+'%';f.style.background=c<25?'var(--bad)':c<60?'var(--gold)':'var(--ok)';$('batv').textContent=c+'%';
+  $('batT').textContent=full?'✅ '+t('full'):'⏱ '+mmss(S.chgDone-Date.now());
+  $('ch1').style.display=$('chS').style.display=full?'none':'';$('stGo').style.display=full?'':'none'}
+function addCharge(n){giveCharge(n);save();refresh();renderStation();toast('⚡ +'+n+'%');beep(700,.2,'sine',.12)}
+$('stGo').onclick=tryStart;
+$('sdbg2').style.display=DEBUG?'':'none';$('sdbg2').onclick=function(){S.miles+=100000;save();refresh()};
+$('ch1').onclick=function(){showRewardedAd(function(){addCharge(50)})};
+$('chS').onclick=function(){payStars('charge',function(ok){if(ok)addCharge(100)})};
+function fmtT(t){var m=Math.floor(t/60),q=Math.floor(t%60);return m+':'+(q<10?'0':'')+q}
+function buildArrival(rt,g){var sk=$('arSk');sk.innerHTML='';
+  for(var i=0;i<30;i++){var b=document.createElement('div');b.className='b';b.style.height=(30+Math.random()*90)+'px';b.style.width=(10+Math.random()*16)+'px';b.style.animationDelay=(i*.045)+'s,'+(Math.random()*3)+'s';sk.appendChild(b)}
+  $('arCity').textContent=String(cn(rt.to)).toUpperCase();$('arSub').textContent=cn(rt.from)+' → '+cn(rt.to)+' · 450 '+t('km');lastShare='🏁 '+cn(rt.to)+' · '+fmt(Math.floor(score))+' '+t('m')+'! '+t('sh1');
+  var nx=ROUTES[S.stage%ROUTES.length];
+  $('arStats').innerHTML='⏱ '+fmtT(T)+' &nbsp; 📏 '+fmt(Math.floor(score))+' &nbsp; +'+fmt(g)+' 🔋';
+  $('arNext').textContent=t('next')+' '+cn(nx.from)+' → '+cn(nx.to)+' · LV '+((S.lvl||0)+1)}
+var CARSVG='<svg viewBox="0 0 120 50"><defs><linearGradient id="sv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#c3c9d3"/><stop offset="1" stop-color="#7c8593"/></linearGradient></defs><path d="M4 35 L10 28 L38 23 L56 14 L82 14 L100 25 L114 29 L116 37 L4 37 Z" fill="url(#sv)" stroke="#eef2f8" stroke-width="1.2"/><path d="M59 16 L80 16 L93 25 L52 25 Z" fill="#3a3016" opacity=".9"/><circle cx="30" cy="38" r="8" fill="#10151d"/><circle cx="30" cy="38" r="4" fill="#cfd4de"/><circle cx="92" cy="38" r="8" fill="#10151d"/><circle cx="92" cy="38" r="4" fill="#cfd4de"/></svg>';
+/* ---- кастомизация ---- */
+var ctab='body';
+function colOf(t){var a=CAT[t],id=S.eq[t];for(var i=0;i<a.length;i++)if(a[i][0]===id)return a[i][1];return a[0][1]}
+function applyCustom(){document.documentElement.style.setProperty('--yoke',colOf('yoke'));try{bodyWhite.color.set(colOf('body'));neonMat.color.set(colOf('neon'));cabinLight.color.set(colOf('neon'))}catch(e){}}
+function openCustom(){renderCustom();setState('CUSTOM')}
+function renderCustom(){['body','yoke','neon'].forEach(function(t){$('ct_'+t).classList.toggle('sel',t===ctab)});
+  var box=$('citems');box.innerHTML='';
+  CAT[ctab].forEach(function(it){var key=ctab+':'+it[0],c=it[2],own=!c||S.own[key],eq=S.eq[ctab]===it[0];
+    var st=own?(eq?'✅':'👆'):c.m?'🔋 '+fmt(c.m):c.a?'📺 '+(S.adc[key]||0)+'/'+c.a:'⭐ '+c.s;
+    var b=document.createElement('button');b.type='button';b.className='card'+(eq?' sel':'');
+    b.innerHTML='<div class="sw" style="background:'+it[1]+';box-shadow:0 0 10px '+it[1]+'"></div><div>'+st+'</div>';
+    b.onclick=function(){buyItem(key,it,own)};box.appendChild(b)})}
+function buyItem(key,it,own){var tab=key.split(':')[0],c=it[2];
+  function unlock(){S.own[key]=1;S.eq[tab]=it[0];save();refresh();renderCustom();toast('✅');beep(700,.15,'sine',.1)}
+  if(own){S.eq[tab]=it[0];save();refresh();renderCustom();return}
+  if(c.m){if(S.miles<c.m){toast(t('no')+' 🔋');return}S.miles-=c.m;unlock()}
+  else if(c.a)showRewardedAd(function(){S.adc[key]=(S.adc[key]||0)+1;if(S.adc[key]>=c.a)unlock();else{save();renderCustom();toast('📺 '+S.adc[key]+'/'+c.a)}});
+  else payStars('item_'+key,function(ok){if(ok)unlock()})}
+/* ---- друзья (реферальная программа) ---- */
+function refLink(){return APP_LINK+'?startapp=ref_'+(S.id||0)}
+function api(path,body,cb){if(!SERVER_URL||!TG||!TG.initData){cb(null);return}
+  try{fetch(SERVER_URL+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(x){return x.json()}).then(cb).catch(function(){cb(null)})}catch(e){cb(null)}}
+function refInit(){var sp=TG&&TG.initDataUnsafe&&TG.initDataUnsafe.start_param,ref=(sp&&sp.indexOf('ref_')===0)?sp.slice(4).replace(/\D/g,''):'';
+  if(ref&&!S.refBy&&S.id&&String(ref)!==String(S.id)){S.refBy=ref;S.miles+=3000;giveCharge(50);setTimeout(function(){toast('🤝 +3 000 🔋 ⚡ +50%')},3800)}
+  api('/reg',{initData:TG&&TG.initData,ref:ref},function(x){if(x&&typeof x.count==='number'){S.refCount=x.count;save()}})}
+function openChannel(){var u='https://t.me/'+CHANNEL;try{if(TG&&TG.openTelegramLink)TG.openTelegramLink(u);else window.open(u)}catch(e){}}
+$('chb').onclick=function(){
+  if(S.subDone){return}
+  if(!chStep){chStep=1;openChannel();$('chb').textContent='✅ '+t('chk');return}
+  api('/sub',{initData:TG&&TG.initData},function(x){
+    if(x&&x.member){S.subDone=1;if(!x.claimed){S.miles+=5000;toast('+5 000 🔋')}save();refresh();$('chb').style.display='none'}
+    else{toast('📢 ✖');chStep=0;$('chb').textContent='📢 +5 000 🔋'}})};
+$('arSh').onclick=function(){shareRef(lastShare)};
+$('lgb').onclick=function(){var i=(LANGS.indexOf(lang)+1)%LANGS.length;S.lang=LANGS[i];lang=S.lang;save();applyLang()};
+function shareRef(txt){var u='https://t.me/share/url?url='+encodeURIComponent(refLink())+'&text='+encodeURIComponent(txt||t('sh2'));try{if(TG&&TG.openTelegramLink)TG.openTelegramLink(u);else window.open(u)}catch(e){}}
+var REFR=[{n:1,t:'🔋 5 000',g:function(){S.miles+=5000}},{n:3,t:'⚡ 100%<br>🔋 10 000',g:function(){giveCharge(100);S.miles+=10000}},{n:5,t:'🎨 {g}',g:function(){S.own['body:gold']=1}},{n:10,t:'💡 {g}<br>🔋 50 000',g:function(){S.own['neon:gold']=1;S.miles+=50000}}];
+function renderFriends(){var c=S.refCount||0;$('fcnt').textContent=c;$('fbarf').style.width=Math.min(100,c*10)+'%';var box=$('ladder');box.innerHTML='';
+  REFR.forEach(function(q){var done=S.refClaimed[q.n],can=c>=q.n&&!done,b=document.createElement('button');b.type='button';b.className='card'+(can?' sel':'');
+    b.innerHTML='<div style="font-size:18px">👥 '+q.n+'</div><div style="font-size:12px;min-height:30px">'+q.t.replace('{g}',t('gold'))+'</div><div>'+(done?'✅':can?'🎁':'🔒')+'</div>';
+    b.onclick=function(){if(!can)return;S.refClaimed[q.n]=1;q.g();save();refresh();renderFriends();toast('🎁 ✅')};box.appendChild(b)})}
+var lastShare='',chStep=0,infoTier=0;
+function tinfo(n){return ['<b>Roadster Performance</b><br>👤👤👤👤 · ','<b>Roadster Thrust</b><br>👤👤 · ','<b>Roadster Rocket</b><br>👤 · '][n-1]+t('i'+n)+'<br>🏁 '+[230,250,320][n-1]+' '+t('kmh')+(n>1?' · 🔥 '+[0,300,390][n-1]+' '+t('kmh'):'')+(n===3?' · ✈️ 5 '+t('sec'):'')}
+function renderShop(){
+  var box=$('tiers');box.innerHTML='';$('tierInfo').innerHTML=tinfo(infoTier||S.tier);
+  [1,2,3].forEach(function(n){
+    var c=TIERS[n-1].cost,own=S.owned>=n;
+    var b=document.createElement('button');b.type='button';
+    b.className='card'+(S.tier===n?' sel':'');
+    b.innerHTML='<div class="ic">'+[CARSVG,'⚡','🚀'][n-1]+'</div><div style="font-size:11px">'+['👤👤👤👤','👤👤','👤'][n-1]+'</div><div>'+(own?(S.tier===n?'✅':'👆'):'🔒 '+fmt(c))+'</div>';
+    b.onclick=function(){
+      infoTier=n;if(own)S.tier=n;
+      else if(S.owned===n-1&&S.miles>=c){S.miles-=c;S.owned=n;S.tier=n;beep(700,0.18,'sine',0.12)}
+      else{toast(t('no')+' 🔋');renderShop();return}
+      save();refresh();renderShop();
+    };
+    box.appendChild(b);
+  });
+}
+
+function wallRide(){
+  if(state!=='GAMEPLAY'||cd>0||wallPhase||!grounded)return;
+  if(wrCool>0){toast('🧲 ⏳ '+Math.ceil(wrCool));return}
+  wrDir=lane<1?-1:lane>1?1:(wrDir||1);wallPhase=1;wrT=0;wrCool=10;bankTarget=wrDir*Math.PI*.42;
+  showBanner('🧲','',1);beep(380,.18,'sawtooth',.09);hap('light');
+}
+function updateWallRide(dt){
+  if(!wallPhase||state!=='GAMEPLAY'){if(!wallPhase){bankAng=0;bankTarget=0}return}
+  wrT+=dt;
+  if(wrT<.7){wallPhase=1;bankTarget=wrDir*Math.PI*.42}
+  else if(wrT<3.4){if(wallPhase===1)beep(420,.18,'sawtooth',.09);wallPhase=2;bankTarget=wrDir*Math.PI*.92}
+  else{wallPhase=3;bankTarget=0;if(Math.abs(bankAng)<.06){wallPhase=0;bankAng=0;reviveUntil=Math.max(reviveUntil,T+.7);return}}
+  bankAng+=(bankTarget-bankAng)*Math.min(1,2.2*dt);
+}
+function puff(o){var g=$('gas');g.style.setProperty('--o',o);g.classList.remove('on');void g.offsetWidth;g.classList.add('on')}
+function showCd(t){var e=$('cd');e.textContent=t;e.style.opacity=1;e.classList.remove('pop');void e.offsetWidth;e.classList.add('pop')}
+function stepGame(dt){
+  var usedGas=false;
+  if(cd>0){cd-=dt;var n=Math.ceil(cd);
+    if(cd<=0){showCd('GO');goT=.8;cityT=Math.min(cityT,.6);beep(900,.35,'square',.1)}
+    else if(n!==cdN){cdN=n;showCd(n);beep(500,.12,'square',.08)}
+    if(cd>0)return}
+  if(goT>0){goT-=dt;if(goT<=0)$('cd').style.opacity=0}
+  T+=dt;
+  var t100=TIERS[S.tier-1].t100;
+  var boostOn=S.tier>=2&&boostHeld()&&air>0&&kmh>=100&&!wallPhase;   // ускоритель: только 2-я и 3-я модели
+  if(boostOn){kmh=Math.min(BOOSTK,kmh+45*dt);air-=20*dt;usedGas=true;puffT-=dt;if(puffT<=0){puff(.25);puffT=.35}}
+  else if(kmh<100)kmh=Math.min(100,kmh+100/t100*dt);
+  else kmh=kmh>MAXK?Math.max(MAXK,kmh-30*dt):Math.min(MAXK,kmh+((MAXK-kmh)*0.048+1.8)*dt);
+  var v=kmh/3.6,mult=T<multUntil?2:1;
+  score+=v*dt*mult;stageDist+=v*dt;
+  updateWallRide(dt);if(wrCool>0&&!wallPhase)wrCool-=dt;
+
+  // Autopilot lane choice
+  if(autoUntil>0&&T<autoUntil){
+    var danger=null;
+    for(var ai=0;ai<act.length;ai++){
+      var om=act[ai];if(!om.visible)continue;
+      var dz=om.position.z;
+      if(dz<-2&&dz>-30&&Math.abs(om.userData.lat-px)<2.0){
+        if(!danger||dz>danger.position.z)danger=om;
+      }
+    }
+    if(danger){
+      var blocked=danger.userData.lane,best=lane,bestSc=-9;
+      for(var L=0;L<=2;L++){
+        if(L===blocked)continue;
+        var sc=(L===1?3:2),busy=false;
+        for(var bj=0;bj<act.length;bj++){
+          var bm=act[bj];if(!bm.visible)continue;
+          if(bm.userData.lane===L&&bm.position.z<-1&&bm.position.z>-24){busy=true;break}
+        }
+        if(!busy&&sc>bestSc){bestSc=sc;best=L}
+      }
+      lane=best;
+    }
+  }else if(autoUntil>0&&T>=autoUntil){autoUntil=0;toast('🤖 '+t('ap')+' '+t('apo'))}
+
+  var dx=(lane-1)*LANE_W-px;
+  px+=dx*Math.min(1,15*dt);
+  steerA+=(dx*12-steerA)*Math.min(1,10*dt);
+  tilt+=(-dx*0.035-tilt)*Math.min(1,8*dt);
+  if(grounded)shakeKick=Math.max(shakeKick,Math.min(1,Math.abs(dx)/3)*(S.tier===1?0.4:0.12));
+
+  if(S.tier>=3&&thrust&&air>0&&!wallPhase){
+    if(grounded){grounded=false;vy=4.2;puff(.4)}
+    vy=Math.min(8,vy+28*dt);air-=20*dt;usedGas=true;puffT-=dt;if(puffT<=0){puff(.3);puffT=.3}
+  }
+  if(!grounded){
+    vy-=19*dt;y+=vy*dt;air=Math.max(0,air);
+    if(y>=5){y=5;if(vy>0)vy=0}
+    if(y<=0){y=0;vy=0;grounded=true;shakeKick=Math.max(shakeKick,0.3);beep(120,0.1,'triangle',0.09)}
+  }
+  if(air<0)air=0;
+  if(!usedGas)air=Math.min(100,air+100/30*dt);   // воздух: полный запас за 30 секунд
+
+  if(rolling){rollT+=dt/0.7;if(rollT>=1){rolling=false;rollT=0}}
+  rollAng=rolling?rollT*Math.PI*2:0;
+
+  updateBonus(v,dt);sinceRow+=v*dt;
+  if(sinceRow>=gap){sinceRow=0;gap=(Math.max(25,v*0.855)+Math.random()*7.2)/GAPF[dIdx()];spawnRow()}
+
+  for(var i=act.length-1;i>=0;i--){
+    var m=act[i],d=m.userData,z0=m.position.z;
+    m.position.z+=v*dt;
+    if(m.position.z-d.l/2>12){m.visible=false;act.splice(i,1);continue}
+    if(!invincible()&&z0<=d.l/2+0.35&&m.position.z>=-(d.l/2+0.35)&&Math.abs(d.lat-px)<d.w/2+0.45&&y<d.h-0.12){
+      crash();return;
+    }
+  }
+  if(stageDist>=stageGoal){stageClear();return}
+  if(bannerT>0){bannerT-=dt;if(bannerT<=0)$('stageBanner').classList.remove('on')}
+  if(cityT>0){cityT-=dt;if(cityT<=0)$('cityFX').classList.remove('on')}
+}
+
+var lastBn=-1,lastKm=-1,lastKs=-1,lastSc=-1,dashEl=document.querySelector('#hud .dash');
+function hud(){var bt=Math.round(batNow());if(bt!==lastBn){lastBn=bt;$('bn').textContent='⚡ '+bt+'%'}
+  var ks=Math.round(kmh);if(ks!==lastKs){lastKs=ks;$('spd').innerHTML=ks+'<small>KM/H</small>'}dashEl.style.transform='translateX(-50%) rotate('+Math.max(-40,Math.min(40,steerA))+'deg)';
+  var sc=Math.floor(score);if(sc!==lastSc){lastSc=sc;$('sc').textContent=sc}var kp=Math.min(450,Math.floor(stageDist/stageGoal*450));if(kp!==lastKm){lastKm=kp;$('kmv').textContent=kp;$('progf').style.width=(kp/4.5)+'%'}
+  var autoOn=autoUntil>0&&T<autoUntil;
+  $('mu').style.visibility=(T<multUntil||autoOn)?'visible':'hidden';
+  $('mu').textContent=autoOn?('🤖 '+Math.ceil(autoUntil-T)+t('sec')):'×2';
+  var a=$('airf');a.style.height=air+'%';
+  a.style.background=air<25?'linear-gradient(0deg,var(--bad),#ff8)':'linear-gradient(0deg,var(--neon),#7af)';
+  $('air').style.opacity=S.tier>=2?1:.18;$('wrb').style.opacity=(wrCool<=0&&!wallPhase)?1:.35;$('thb').style.opacity=$('bsb').style.opacity=air>1?1:.4;
+  $('fan').classList.toggle('on',grounded);
+}
+
+function tubePos(ang,lat,h){
+  var w=Math.min(1,Math.abs(ang)/0.5),r=(-GY-1.25)*(1-w)+(R_TUBE-1.25)*w-h,ca=Math.cos(ang),sa=Math.sin(ang);
+  return{x:lat*ca+sa*r,y:lat*sa-ca*r};
+}
+
+function update(dt,now){
+  if(state==='GAMEPLAY')stepGame(dt);
+  else if(state==='CRASH')kmh=0;else if(state==='ARRIVAL')kmh=Math.max(0,kmh-45*dt);
+  shakeKick*=Math.exp(-3.5*dt);
+  var v=kmh/3.6;
+  var nf=66+Math.min(20,kmh*0.05);if(Math.abs(nf-cam.fov)>.2){cam.fov=nf;cam.updateProjectionMatrix()}
+  for(var si=0;si<tubeSegs.length;si++){
+    var seg=tubeSegs[si];seg.position.z+=v*dt;
+    if(seg.position.z>SEG_LEN/2+8)seg.position.z-=SEG_LEN*SEG_N;
+  }
+  // Obstacles always on floor
+  for(var ai=0;ai<act.length;ai++){
+    var m=act[ai];if(!m.visible)continue;
+    
+    m.position.x=m.userData.lat;m.position.y=GY;m.rotation.z=0;
+  }
+  if(state==='GAMEPLAY'||state==='CRASH'||state==='ARRIVAL'){
+    var amp=kmh*0.00007+shakeKick*0.08;
+    var rnd=function(){return(Math.random()-0.5)*2*amp};
+    var pp=tubePos(bankAng,px+rnd(),y);
+    cam.position.set(pp.x,pp.y,rnd());
+    cam.rotation.set(Math.max(-0.09,Math.min(0.09,vy*0.01)),0,bankAng+tilt*0.4+rollAng+rnd()*0.1);
+  }else{
+    var s=now/1000,pm=tubePos(0,Math.sin(s*0.25)*0.25,0);
+    cam.position.set(pm.x,pm.y+Math.sin(s*0.4)*0.04,0);
+    cam.rotation.set(0.02,Math.sin(s*0.2)*0.025,0);
+  }
+  if(vac)vac.gain.value=(state==='GAMEPLAY'&&grounded)?0.018+Math.min(0.08,shakeKick*0.15)+kmh/5500:0;
+  if(state==='GAMEPLAY')hud();
+}
+
+var last=performance.now();
+function frame(now){
+  requestAnimationFrame(frame);
+  if(!R||!scene||!cam)return;
+  checkOrient();
+  var dt=Math.min(0.05,(now-last)/1000);last=now;
+  update(dt,now);
+  R.render(scene,cam);
+}
+
+function startGift(){if(START_GIFT&&!S.gift){S.gift=1;S.miles+=START_GIFT}}
+function dailyBonus(){var d=Math.floor(Date.now()/864e5);if(!S.day){S.day=d;S.streak=0;return}if(S.day===d)return;S.streak=(S.day===d-1)?Math.min(7,(S.streak||0)+1):1;S.day=d;var b=500*S.streak;S.miles+=b;setTimeout(function(){toast('🎁 '+t('day')+' '+S.streak+': +'+fmt(b)+' 🔋')},2200)}
+setInterval(function(){if(state==='MENU'||state==='STATION'){refresh();if(state==='STATION')renderStation()}},1000);
+setState('BOOT');tgReady();
+load(function(){
+  tgIdentity();lang=detectLang();applyLang();dailyBonus();startGift();refInit();save();refresh();
+  setTimeout(function(){setState('MENU')},1600);
+});
+requestAnimationFrame(frame);
+})();
+</script>
+</body></html>
