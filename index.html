@@ -11,7 +11,7 @@
 <style>
 :root{--bg:#030508;--neon:#00e8ff;--gold:#ffc94d;--ok:#35ff7a;--bad:#ff3b5c;--ink:#e8f4ff;--yoke:#eef0f4;--panel:rgba(4,8,16,.92)}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;background:var(--bg);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;font-family:system-ui,-apple-system,sans-serif;color:var(--ink)}
+html,body{width:100%;height:100%;background:var(--bg);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:var(--ink)}
 #stage{position:fixed;left:0;top:0;width:100%;height:100%;transform-origin:center center;background:var(--bg);overflow:hidden}
 canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #glass{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(255,190,70,.10) 0%,transparent 40%,rgba(255,190,70,.12) 100%);box-shadow:inset 0 60px 50px -30px #000,inset 0 -30px 30px -15px rgba(0,0,0,.4)}
@@ -20,11 +20,18 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .layer{position:absolute;inset:0;display:none;pointer-events:none}.layer.on{display:block}
 button,.panel,.pill,.tapzone{pointer-events:auto}
 .top{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));left:12px;right:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;z-index:5}
-.pill{background:var(--panel);border:1px solid rgba(0,232,255,.4);border-radius:22px;padding:6px 14px;font-size:15px;font-weight:600;backdrop-filter:blur(8px)}
+#rcol{position:absolute;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column-reverse;gap:8px;z-index:6;pointer-events:none}
+#rcol .ib{position:static;width:52px;height:52px;font-size:22px;pointer-events:auto}
+#thb{order:1}#bsb{order:2}#rlb{order:3}#wrb{order:4}
+#crash .panel{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 16px;width:min(94vw,440px);padding:10px 14px;font-size:16px}
+#crash .panel .row{flex-basis:100%;margin-top:8px;flex-wrap:nowrap;gap:10px}
+#crash .panel .ib{width:44px;height:44px;font-size:18px}
+.usd{display:inline-block;width:1.2em;height:1.2em;line-height:1.2em;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffeaa0,#f5b800 60%,#b57a00);color:#5a3a00;font-weight:800;font-size:.8em;text-align:center;vertical-align:middle;box-shadow:0 0 6px rgba(255,190,0,.6)}
+.pill{background:linear-gradient(160deg,rgba(14,22,36,.92),rgba(4,8,16,.88));border:1px solid rgba(0,232,255,.4);border-radius:22px;padding:6px 14px;font-size:15px;font-weight:600;backdrop-filter:blur(10px);box-shadow:0 4px 14px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06)}
 .row{position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;align-items:center;gap:24px;z-index:5}
 .panel .row{position:static;margin-top:14px;flex-wrap:wrap;gap:12px}
-.ib{border:2px solid var(--neon);background:rgba(0,232,255,.1);color:var(--ink);border-radius:50%;width:56px;height:56px;font-size:22px;cursor:pointer;box-shadow:0 0 16px rgba(0,232,255,.2);padding:0;-webkit-tap-highlight-color:transparent}
-.ib:active{transform:scale(.92)}
+.ib{border:2px solid var(--neon);background:linear-gradient(145deg,rgba(0,232,255,.18),rgba(0,232,255,.04));color:var(--ink);border-radius:50%;width:56px;height:56px;font-size:22px;cursor:pointer;box-shadow:0 0 16px rgba(0,232,255,.25),inset 0 1px 1px rgba(255,255,255,.15);padding:0;-webkit-tap-highlight-color:transparent;transition:box-shadow .15s,transform .1s}
+.ib:active{transform:scale(.92);box-shadow:0 0 22px rgba(0,232,255,.45),inset 0 1px 1px rgba(255,255,255,.2)}
 .ib.big{width:92px;height:92px;font-size:42px}
 .panel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid rgba(0,232,255,.45);border-radius:18px;padding:18px 24px;text-align:center;font-size:20px;min-width:240px;backdrop-filter:blur(12px)}
 #splash{background:radial-gradient(ellipse at 50% 40%,#0a1525 0%,var(--bg) 70%)}
@@ -40,7 +47,7 @@ button,.panel,.pill,.tapzone{pointer-events:auto}
 #menu .hint{position:absolute;top:32%;left:0;right:0;text-align:center;font-size:12px;color:rgba(232,244,255,.4)}
 #hud .dash{position:absolute;left:50%;bottom:calc(2px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(48vw,280px);pointer-events:none;transform-origin:50% 72%}
 #hud .dash svg{width:100%;display:block;filter:drop-shadow(0 0 6px rgba(0,232,255,.25))}
-#spd{position:absolute;left:0;right:0;top:36%;text-align:center;font:700 30px/1 ui-monospace,monospace;color:#fff;text-shadow:0 0 10px var(--gold)}
+#spd{position:absolute;left:0;right:0;top:36%;text-align:center;font:800 30px/1 'Consolas','SF Mono',ui-monospace,monospace;letter-spacing:1px;color:#fff;text-shadow:0 0 12px var(--gold),0 0 2px #fff}
 #spd small{display:block;font-size:10px;letter-spacing:2px;opacity:.65;margin-top:1px}
 #air{position:absolute;left:calc(10px + env(safe-area-inset-left,0px));bottom:90px;width:12px;height:100px;border:2px solid rgba(0,232,255,.45);border-radius:8px;display:flex;align-items:flex-end;overflow:hidden;background:rgba(3,5,8,.7)}
 #airf{display:block;width:100%;height:100%;background:linear-gradient(0deg,var(--neon),#7af)}
@@ -52,7 +59,10 @@ button,.panel,.pill,.tapzone{pointer-events:auto}
 .tapzone{position:absolute;top:0;bottom:0;width:40%;z-index:4}#tapL{left:0}#tapR{right:0}#tapM{left:40%;width:20%}
 #crack{position:absolute;inset:0;width:100%;height:100%}
 #crack polyline{fill:none;stroke:#fff;stroke-width:1.6;opacity:.75;vector-effect:non-scaling-stroke}
-#tiers{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+#tiers{display:flex;gap:8px;justify-content:center;flex-wrap:nowrap}
+.panel{max-height:calc(100% - 112px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow-y:auto;box-sizing:border-box;touch-action:pan-y}
+#shop .panel{padding:10px 14px}#shop .panel .row{margin-top:8px}#shop .panel .ib{width:44px;height:44px;font-size:18px}
+#tiers .card{width:calc((100% - 24px)/4);min-width:0;padding:8px 2px;font-size:12px}#tiers .card .ic svg{width:100%;max-width:64px}
 .card{pointer-events:auto;width:92px;padding:10px 4px;border-radius:14px;border:2px solid #2a3545;background:rgba(0,232,255,.05);color:var(--ink);font-size:13px;cursor:pointer}
 .card.sel{border-color:var(--ok);box-shadow:0 0 12px rgba(53,255,122,.3)}
 .card .ic{font-size:28px}
@@ -126,7 +136,7 @@ button.pill{color:var(--ink);font-family:inherit;cursor:pointer}
   <div class="route" id="menuRoute">Pretoria → Kingston</div>
   <div class="hint" data-i="hint"></div>
   <div class="top">
-    <div class="pill">🔋 <b class="mv">0</b></div>
+    <div class="pill"><span class="usd">$</span> <b class="mv">0</b></div>
     <div class="pill" id="tb">I</div><button class="pill" id="chgp" type="button">⚡ <b id="chgv">100</b>%</button><button class="pill" id="lgb" type="button">🌐 EN</button>
     <button class="ib" style="width:40px;height:40px;font-size:17px" id="bt" type="button">🏆</button>
   </div>
@@ -157,7 +167,7 @@ button.pill{color:var(--ink);font-family:inherit;cursor:pointer}
     </svg>
     <div id="spd">0<small>KM/H</small></div>
   </div>
-  <button class="ib" id="wrb" type="button">🧲</button><button class="ib" id="thb" type="button" style="display:none">✈️</button><button class="ib" id="bsb" type="button" style="display:none">🔥</button><button class="ib" id="rlb" type="button" style="display:none">🔄</button><div id="cd"></div><div id="help"></div>
+  <div id="rcol"><button class="ib" id="wrb" type="button">🧲</button><button class="ib" id="thb" type="button" style="display:none">✈️</button><button class="ib" id="bsb" type="button" style="display:none">🔥</button><button class="ib" id="rlb" type="button" style="display:none">🔄</button></div><div id="cd"></div><div id="help"></div>
   <div class="tapzone" id="tapL"></div>
   <div class="tapzone" id="tapR"></div><div class="tapzone" id="tapM"></div>
 </div>
@@ -179,7 +189,7 @@ button.pill{color:var(--ink);font-family:inherit;cursor:pointer}
   </svg>
   <div class="panel">
     <div>📏 <b id="rm">0</b></div>
-    <div>+<b id="rg">0</b> 🔋</div><div>⚡ <b id="rb">0</b>%</div>
+    <div>+<b id="rg">0</b> <span class="usd">$</span></div><div>⚡ <b id="rb">0</b>%</div>
     <div id="nr">🏆 🆕</div>
     <div class="row">
       <button class="ib" id="br" type="button">↻</button>
@@ -191,20 +201,20 @@ button.pill{color:var(--ink);font-family:inherit;cursor:pointer}
 <div id="shop" class="layer">
   <div class="top">
     <button class="ib" style="width:40px;height:40px;font-size:17px" id="sb" type="button">⬅️</button>
-    <div class="pill">🔋 <b class="mv">0</b></div>
+    <div class="pill"><span class="usd">$</span> <b class="mv">0</b></div>
   </div>
-  <div class="panel" style="width:min(90vw,380px)">
+  <div class="panel" style="width:min(94vw,460px)">
     <div id="tiers"></div><div id="tierInfo" style="font-size:12px;opacity:.9;margin-top:10px;line-height:1.45"></div>
     <div class="row">
       <button class="ib" id="sad" type="button">🎁</button>
       <button class="ib" id="sst" type="button">🎨</button>
     </div>
-    <div style="margin-top:10px;font-size:12px;opacity:.55">🎁 📺 → 🤖 40<span data-i="sec"></span></div><button class="pill" id="sdbg" type="button" style="margin-top:8px;font-size:15px;border-color:var(--gold)">⭐ 1 → +1 000 🔋</button><button class="pill" id="sdbg2" type="button" style="display:none;margin:6px 0 0 6px;font-size:12px;border-color:var(--gold)">🧪 +100000</button>
+    <div style="margin-top:10px;font-size:12px;opacity:.55">🎁 📺 → 🤖 40<span data-i="sec"></span></div><button class="pill" id="sdbg" type="button" style="margin-top:8px;font-size:15px;border-color:var(--gold)">⭐ 1 → +1 000 <span class="usd">$</span></button><button class="pill" id="sdbg2" type="button" style="display:none;margin:6px 0 0 6px;font-size:12px;border-color:var(--gold)">🧪 +100000</button>
   </div>
 </div>
 
 <div id="station" class="layer">
-  <div class="top"><button class="ib" style="width:40px;height:40px;font-size:17px" id="stb" type="button">⬅️</button><div class="pill">🔋 <b class="mv">0</b></div></div>
+  <div class="top"><button class="ib" style="width:40px;height:40px;font-size:17px" id="stb" type="button">⬅️</button><div class="pill"><span class="usd">$</span> <b class="mv">0</b></div></div>
   <div class="panel" style="width:min(92vw,420px)">
     <div style="font-size:16px;opacity:.85">🔌 <span data-i="stT"></span></div>
     <div id="bat"><i id="batf"></i><b id="batv">0%</b></div>
@@ -220,20 +230,20 @@ button.pill{color:var(--ink);font-family:inherit;cursor:pointer}
     <div class="row"><button class="ib big" id="arGo" type="button" style="width:72px;height:72px;font-size:32px">▶</button><button class="ib" id="arHome" type="button">🏠</button><button class="ib" id="arSh" type="button">📤</button></div></div>
 </div>
 <div id="custom" class="layer">
-  <div class="top"><button class="ib" style="width:40px;height:40px;font-size:17px" id="cb" type="button">⬅️</button><div class="pill">🔋 <b class="mv">0</b></div></div>
+  <div class="top"><button class="ib" style="width:40px;height:40px;font-size:17px" id="cb" type="button">⬅️</button><div class="pill"><span class="usd">$</span> <b class="mv">0</b></div></div>
   <div class="panel" style="width:min(94vw,500px)">
     <div><button class="wbtn" id="ct_body" type="button">🎨</button> <button class="wbtn" id="ct_yoke" type="button">🕹️</button> <button class="wbtn" id="ct_neon" type="button">💡</button></div>
     <div id="citems"></div>
-    <div style="font-size:12px;opacity:.55;margin-top:8px">🔋 · 📺 · ⭐ Telegram Stars</div>
+    <div style="font-size:12px;opacity:.55;margin-top:8px"><span class="usd">$</span> · 📺 · ⭐ Telegram Stars</div>
   </div>
 </div>
 <div id="friends" class="layer">
-  <div class="top"><button class="ib" style="width:40px;height:40px;font-size:17px" id="fb" type="button">⬅️</button><div class="pill">🔋 <b class="mv">0</b></div></div>
+  <div class="top"><button class="ib" style="width:40px;height:40px;font-size:17px" id="fb" type="button">⬅️</button><div class="pill"><span class="usd">$</span> <b class="mv">0</b></div></div>
   <div class="panel" style="width:min(94vw,520px);padding:14px 18px">
     <div style="font-size:16px">🤝 <span data-i="fr"></span> · <b id="fcnt">0</b>/10</div>
     <div id="fbar"><i id="fbarf"></i></div>
     <div id="ladder"></div>
-    <div class="row" style="margin-top:10px"><button class="wbtn gold" id="fshare" type="button">📤 <span data-i="inv"></span></button><button class="wbtn" id="fcopy" type="button">📋 <span data-i="lnk"></span></button><button class="wbtn" id="chb" type="button" style="display:none">📢 +5 000 🔋</button></div>
+    <div class="row" style="margin-top:10px"><button class="wbtn gold" id="fshare" type="button">📤 <span data-i="inv"></span></button><button class="wbtn" id="fcopy" type="button">📋 <span data-i="lnk"></span></button><button class="wbtn" id="chb" type="button" style="display:none">📢 +5 000 <span class="usd">$</span></button></div>
     <div style="font-size:12px;opacity:.55;margin-top:6px"><span data-i="frN"></span></div>
   </div>
 </div>
@@ -256,16 +266,16 @@ var CHANNEL='';
 var START_GIFT=0;           // стартовый подарок миль (0 — игра начинается с нуля)             // ваш канал без @, например RoadsterLoopNews
 /* ============================================= */
 var LT={};
-LT.en={hint:'tap left / right: change lane',h1:'◀ lane | 🧲 wall (center / button) | lane ▶',h2:'◀ lane | 🔥 hold: booster · 🧲 wall | lane ▶',h3:'◀ lane | ✈️ hold: fly · 🔥 booster · 🔄 roll · 🧲 | lane ▶',km:'km',kmh:'km/h',m:'m',sec:'s',start:'START',fin:'FINISH',soon:'soon',rec:'record',ap:'autopilot',apn:'next run',apo:'off',copied:'link copied',needchg:'charge needed',no:'not enough',full:'fully charged',regen:'+25% in',next:'Next:',stT:'Tesla charging station',stN:'Wait 2 minutes, watch 2 ads, or pay 1 ⭐ for instant charge',fr:'Friends',inv:'Invite',lnk:'Link',frN:'Your friend gets 🔋 3 000 + ⚡ 50%',gold:'gold',sh1:'Beat my record!',sh2:'🚀 Roadster Loop — race through the tunnel! Join: 🔋 3 000 and ⚡ 50% gift',day:'day',noad:'no ads now',chk:'check',i1:'AWD · drives briefly on tunnel walls and ceiling',i2:'SpaceX cold-gas thrusters: 🔥 booster · 🧲 walls',i3:'Tanks and nozzles: ✈️ 5 s flight, 🔄 roll, 🔥 booster · 🧲 walls'};
-LT.ru={hint:'тап слева / справа — смена полосы',h1:'◀ полоса | 🧲 стена (центр / кнопка) | полоса ▶',h2:'◀ полоса | 🔥 держи — ускоритель · 🧲 стена | полоса ▶',h3:'◀ полоса | ✈️ держи — полёт · 🔥 ускоритель · 🔄 бочка · 🧲 | полоса ▶',km:'км',kmh:'км/ч',m:'м',sec:'с',start:'СТАРТ',fin:'ФИНИШ',soon:'скоро',rec:'рекорд',ap:'автопилот',apn:'в следующем заезде',apo:'выкл',copied:'ссылка скопирована',needchg:'нужен заряд',no:'не хватает',full:'полный заряд',regen:'+25% через',next:'Дальше:',stT:'Зарядная станция Tesla',stN:'Подождите 2 минуты, посмотрите 2 рекламы или заплатите 1 ⭐ за мгновенную зарядку',fr:'Друзья',inv:'Пригласить',lnk:'Ссылка',frN:'Друг получает 🔋 3 000 + ⚡ 50%',gold:'золото',sh1:'Побей мой рекорд!',sh2:'🚀 Roadster Loop — гонка в тоннеле! Заходи: 🔋 3 000 и ⚡ 50% в подарок',day:'день',noad:'нет рекламы',chk:'проверить',i1:'полный привод · коротко едет по стенам и потолку тоннеля',i2:'микродвигатели SpaceX на холодном газе: 🔥 ускоритель · 🧲 стены',i3:'баллоны и сопла: ✈️ полёт 5 с, 🔄 бочка, 🔥 ускоритель · 🧲 стены'};
-LT.uk={hint:'тап ліворуч / праворуч — зміна смуги',h1:'◀ смуга | 🧲 стіна (центр / кнопка) | смуга ▶',h2:'◀ смуга | 🔥 утримуй — прискорювач · 🧲 стіна | смуга ▶',h3:'◀ смуга | ✈️ утримуй — політ · 🔥 прискорювач · 🔄 бочка · 🧲 | смуга ▶',km:'км',kmh:'км/год',m:'м',sec:'с',start:'СТАРТ',fin:'ФІНІШ',soon:'скоро',rec:'рекорд',ap:'автопілот',apn:'у наступному заїзді',apo:'вимк',copied:'посилання скопійовано',needchg:'потрібен заряд',no:'не вистачає',full:'повний заряд',regen:'+25% через',next:'Далі:',stT:'Зарядна станція Tesla',stN:'Зачекайте 2 хвилини, перегляньте 2 реклами або заплатіть 1 ⭐ за миттєву зарядку',fr:'Друзі',inv:'Запросити',lnk:'Посилання',frN:'Друг отримує 🔋 3 000 + ⚡ 50%',gold:'золото',sh1:'Побий мій рекорд!',sh2:'🚀 Roadster Loop — перегони в тунелі! Приєднуйся: 🔋 3 000 і ⚡ 50% у подарунок',day:'день',noad:'немає реклами',chk:'перевірити',i1:'повний привід · недовго їде по стінах і стелі тунелю',i2:'мікродвигуни SpaceX на холодному газі: 🔥 прискорювач · 🧲 стіни',i3:'балони й сопла: ✈️ політ 5 с, 🔄 бочка, 🔥 прискорювач · 🧲 стіни'};
-LT.es={hint:'toca izquierda / derecha: cambiar de carril',h1:'◀ carril | 🧲 pared (centro / botón) | carril ▶',h2:'◀ carril | 🔥 mantén: acelerador · 🧲 pared | carril ▶',h3:'◀ carril | ✈️ mantén: volar · 🔥 acelerador · 🔄 giro · 🧲 | carril ▶',km:'km',kmh:'km/h',m:'m',sec:'s',start:'SALIDA',fin:'META',soon:'pronto',rec:'récord',ap:'piloto automático',apn:'en la próxima carrera',apo:'apagado',copied:'enlace copiado',needchg:'falta carga',no:'no alcanza',full:'carga completa',regen:'+25% en',next:'Siguiente:',stT:'Estación de carga Tesla',stN:'Espera 2 minutos, mira 2 anuncios o paga 1 ⭐ por carga instantánea',fr:'Amigos',inv:'Invitar',lnk:'Enlace',frN:'Tu amigo recibe 🔋 3 000 + ⚡ 50%',gold:'oro',sh1:'¡Supera mi récord!',sh2:'🚀 Roadster Loop: ¡carrera en el túnel! Únete: 🔋 3 000 y ⚡ 50% de regalo',day:'día',noad:'sin anuncios',chk:'comprobar',i1:'tracción total · avanza un rato por paredes y techo del túnel',i2:'propulsores de gas frío SpaceX: 🔥 acelerador · 🧲 paredes',i3:'tanques y toberas: ✈️ vuelo 5 s, 🔄 giro, 🔥 acelerador · 🧲 paredes'};
-LT.pt={hint:'toque esquerda / direita: trocar de faixa',h1:'◀ faixa | 🧲 parede (centro / botão) | faixa ▶',h2:'◀ faixa | 🔥 segure: acelerador · 🧲 parede | faixa ▶',h3:'◀ faixa | ✈️ segure: voar · 🔥 acelerador · 🔄 giro · 🧲 | faixa ▶',km:'km',kmh:'km/h',m:'m',sec:'s',start:'LARGADA',fin:'CHEGADA',soon:'em breve',rec:'recorde',ap:'piloto automático',apn:'na próxima corrida',apo:'desligado',copied:'link copiado',needchg:'precisa de carga',no:'insuficiente',full:'carga completa',regen:'+25% em',next:'Próximo:',stT:'Estação de recarga Tesla',stN:'Espere 2 minutos, veja 2 anúncios ou pague 1 ⭐ para carga instantânea',fr:'Amigos',inv:'Convidar',lnk:'Link',frN:'Seu amigo ganha 🔋 3 000 + ⚡ 50%',gold:'ouro',sh1:'Bata meu recorde!',sh2:'🚀 Roadster Loop — corrida no túnel! Entre: 🔋 3 000 e ⚡ 50% de presente',day:'dia',noad:'sem anúncios',chk:'verificar',i1:'tração integral · anda por pouco tempo nas paredes e no teto do túnel',i2:'propulsores a gás frio SpaceX: 🔥 acelerador · 🧲 paredes',i3:'tanques e bocais: ✈️ voo de 5 s, 🔄 giro, 🔥 acelerador · 🧲 paredes'};
-LT.de={hint:'links / rechts tippen: Spur wechseln',h1:'◀ Spur | 🧲 Wand (Mitte / Knopf) | Spur ▶',h2:'◀ Spur | 🔥 halten: Booster · 🧲 Wand | Spur ▶',h3:'◀ Spur | ✈️ halten: fliegen · 🔥 Booster · 🔄 Rolle · 🧲 | Spur ▶',km:'km',kmh:'km/h',m:'m',sec:'s',start:'START',fin:'ZIEL',soon:'bald',rec:'Rekord',ap:'Autopilot',apn:'im nächsten Lauf',apo:'aus',copied:'Link kopiert',needchg:'Ladung nötig',no:'nicht genug',full:'voll geladen',regen:'+25% in',next:'Weiter:',stT:'Tesla-Ladestation',stN:'Warte 2 Minuten, sieh 2 Werbevideos oder zahle 1 ⭐ für sofortiges Laden',fr:'Freunde',inv:'Einladen',lnk:'Link',frN:'Dein Freund erhält 🔋 3 000 + ⚡ 50%',gold:'Gold',sh1:'Schlag meinen Rekord!',sh2:'🚀 Roadster Loop — Rennen im Tunnel! Mach mit: 🔋 3 000 und ⚡ 50% Geschenk',day:'Tag',noad:'keine Werbung',chk:'prüfen',i1:'Allrad · fährt kurz an Tunnelwänden und Decke',i2:'SpaceX-Kaltgasdüsen: 🔥 Booster · 🧲 Wände',i3:'Tanks und Düsen: ✈️ 5 s Flug, 🔄 Rolle, 🔥 Booster · 🧲 Wände'};
-LT.fr={hint:'touchez gauche / droite : changer de voie',h1:'◀ voie | 🧲 mur (centre / bouton) | voie ▶',h2:'◀ voie | 🔥 maintenir : booster · 🧲 mur | voie ▶',h3:'◀ voie | ✈️ maintenir : voler · 🔥 booster · 🔄 tonneau · 🧲 | voie ▶',km:'km',kmh:'km/h',m:'m',sec:'s',start:'DÉPART',fin:'ARRIVÉE',soon:'bientôt',rec:'record',ap:'pilote auto',apn:'à la prochaine course',apo:'désactivé',copied:'lien copié',needchg:'recharge nécessaire',no:'insuffisant',full:'charge complète',regen:'+25% dans',next:'Suite :',stT:'Station de recharge Tesla',stN:'Attendez 2 minutes, regardez 2 pubs ou payez 1 ⭐ pour une charge instantanée',fr:'Amis',inv:'Inviter',lnk:'Lien',frN:'Votre ami reçoit 🔋 3 000 + ⚡ 50 %',gold:'or',sh1:'Bats mon record !',sh2:'🚀 Roadster Loop — course dans le tunnel ! Rejoins-nous : 🔋 3 000 et ⚡ 50 % offerts',day:'jour',noad:'pas de pub',chk:'vérifier',i1:'transmission intégrale · roule brièvement sur les murs et le plafond',i2:'propulseurs à gaz froid SpaceX : 🔥 booster · 🧲 murs',i3:'réservoirs et tuyères : ✈️ vol de 5 s, 🔄 tonneau, 🔥 booster · 🧲 murs'};
-LT.tr={hint:'sola / sağa dokun: şerit değiştir',h1:'◀ şerit | 🧲 duvar (orta / düğme) | şerit ▶',h2:'◀ şerit | 🔥 basılı tut: hızlandırıcı · 🧲 duvar | şerit ▶',h3:'◀ şerit | ✈️ basılı tut: uç · 🔥 hızlandırıcı · 🔄 takla · 🧲 | şerit ▶',km:'km',kmh:'km/sa',m:'m',sec:'sn',start:'BAŞLA',fin:'BİTİŞ',soon:'yakında',rec:'rekor',ap:'otopilot',apn:'sonraki yarışta',apo:'kapalı',copied:'bağlantı kopyalandı',needchg:'şarj gerekli',no:'yetersiz',full:'tam şarj',regen:'+25% için',next:'Sıradaki:',stT:'Tesla şarj istasyonu',stN:'2 dakika bekle, 2 reklam izle ya da anında şarj için 1 ⭐ öde',fr:'Arkadaşlar',inv:'Davet et',lnk:'Bağlantı',frN:'Arkadaşın 🔋 3 000 + ⚡ %50 alır',gold:'altın',sh1:'Rekorumu geç!',sh2:'🚀 Roadster Loop — tünelde yarış! Katıl: 🔋 3 000 ve ⚡ %50 hediye',day:'gün',noad:'reklam yok',chk:'kontrol',i1:'dört çeker · tünel duvarında ve tavanda kısa süre gider',i2:'SpaceX soğuk gaz iticileri: 🔥 hızlandırıcı · 🧲 duvarlar',i3:'tanklar ve nozullar: ✈️ 5 sn uçuş, 🔄 takla, 🔥 hızlandırıcı · 🧲 duvarlar'};
-LT.id={hint:'ketuk kiri / kanan: pindah jalur',h1:'◀ jalur | 🧲 dinding (tengah / tombol) | jalur ▶',h2:'◀ jalur | 🔥 tahan: booster · 🧲 dinding | jalur ▶',h3:'◀ jalur | ✈️ tahan: terbang · 🔥 booster · 🔄 putar · 🧲 | jalur ▶',km:'km',kmh:'km/jam',m:'m',sec:'dtk',start:'MULAI',fin:'FINIS',soon:'segera',rec:'rekor',ap:'autopilot',apn:'di balapan berikutnya',apo:'mati',copied:'tautan disalin',needchg:'butuh daya',no:'tidak cukup',full:'daya penuh',regen:'+25% dalam',next:'Berikutnya:',stT:'Stasiun pengisian Tesla',stN:'Tunggu 2 menit, tonton 2 iklan, atau bayar 1 ⭐ untuk pengisian instan',fr:'Teman',inv:'Undang',lnk:'Tautan',frN:'Temanmu mendapat 🔋 3 000 + ⚡ 50%',gold:'emas',sh1:'Kalahkan rekorku!',sh2:'🚀 Roadster Loop — balapan di terowongan! Gabung: 🔋 3 000 dan ⚡ 50% hadiah',day:'hari',noad:'tidak ada iklan',chk:'cek',i1:'penggerak semua roda · melaju singkat di dinding dan langit-langit terowongan',i2:'pendorong gas dingin SpaceX: 🔥 booster · 🧲 dinding',i3:'tangki dan nozel: ✈️ terbang 5 dtk, 🔄 putar, 🔥 booster · 🧲 dinding'};
-LT.ar={hint:'اضغط يسار / يمين لتغيير المسار',h1:'◀ مسار | 🧲 جدار (المنتصف / زر) | مسار ▶',h2:'◀ مسار | 🔥 اضغط مطولاً: معزّز · 🧲 جدار | مسار ▶',h3:'◀ مسار | ✈️ اضغط مطولاً: طيران · 🔥 معزّز · 🔄 دوران · 🧲 | مسار ▶',km:'كم',kmh:'كم/س',m:'م',sec:'ث',start:'انطلاق',fin:'النهاية',soon:'قريباً',rec:'الرقم القياسي',ap:'القيادة الآلية',apn:'في السباق القادم',apo:'متوقفة',copied:'تم نسخ الرابط',needchg:'الشحن مطلوب',no:'غير كافٍ',full:'شحن كامل',regen:'+25% خلال',next:'التالي:',stT:'محطة شحن تسلا',stN:'انتظر دقيقتين أو شاهد إعلانين أو ادفع 1 ⭐ لشحن فوري',fr:'الأصدقاء',inv:'دعوة',lnk:'الرابط',frN:'صديقك يحصل على 🔋 3 000 + ⚡ 50%',gold:'ذهبي',sh1:'تحدَّ رقمي القياسي!',sh2:'🚀 Roadster Loop — سباق داخل النفق! انضم: 🔋 3 000 و ⚡ 50% هدية',day:'يوم',noad:'لا توجد إعلانات',chk:'تحقق',i1:'دفع رباعي · يسير لفترة قصيرة على جدران النفق وسقفه',i2:'دافعات غاز بارد من SpaceX: 🔥 معزّز · 🧲 جدران',i3:'خزانات وفوهات: ✈️ طيران 5 ث، 🔄 دوران، 🔥 معزّز · 🧲 جدران'};
+LT.en={hint:'tap left / right: change lane',h1:'◀ lane | 🧲 wall (center / button) | lane ▶',h2:'◀ lane | 🔥 hold: booster · 🧲 wall | lane ▶',h3:'◀ lane | ✈️ hold: fly · 🔥 booster · 🔄 roll · 🧲 | lane ▶',km:'km',kmh:'km/h',m:'m',sec:'s',start:'START',fin:'FINISH',soon:'soon',rec:'record',ap:'autopilot',apn:'next run',apo:'off',copied:'link copied',needchg:'charge needed',no:'not enough',full:'fully charged',regen:'+25% in',next:'Next:',stT:'Tesla charging station',stN:'Wait 2 minutes, watch 2 ads, or pay 1 ⭐ for instant charge',fr:'Friends',inv:'Invite',lnk:'Link',frN:'Your friend gets $ 3 000 + ⚡ 50%',gold:'gold',sh1:'Beat my record!',sh2:'🚀 Roadster Loop — race through the tunnel! Join: $ 3 000 and ⚡ 50% gift',day:'day',noad:'no ads now',chk:'check',i1:'AWD · drives briefly on tunnel walls and ceiling',i2:'SpaceX cold-gas thrusters: 🔥 booster · 🧲 walls',i3:'Tanks and nozzles: ✈️ 5 s flight, 🔄 roll, 🔥 booster · 🧲 walls'};
+LT.ru={hint:'тап слева / справа — смена полосы',h1:'◀ полоса | 🧲 стена (центр / кнопка) | полоса ▶',h2:'◀ полоса | 🔥 держи — ускоритель · 🧲 стена | полоса ▶',h3:'◀ полоса | ✈️ держи — полёт · 🔥 ускоритель · 🔄 бочка · 🧲 | полоса ▶',km:'км',kmh:'км/ч',m:'м',sec:'с',start:'СТАРТ',fin:'ФИНИШ',soon:'скоро',rec:'рекорд',ap:'автопилот',apn:'в следующем заезде',apo:'выкл',copied:'ссылка скопирована',needchg:'нужен заряд',no:'не хватает',full:'полный заряд',regen:'+25% через',next:'Дальше:',stT:'Зарядная станция Tesla',stN:'Подождите 2 минуты, посмотрите 2 рекламы или заплатите 1 ⭐ за мгновенную зарядку',fr:'Друзья',inv:'Пригласить',lnk:'Ссылка',frN:'Друг получает $ 3 000 + ⚡ 50%',gold:'золото',sh1:'Побей мой рекорд!',sh2:'🚀 Roadster Loop — гонка в тоннеле! Заходи: $ 3 000 и ⚡ 50% в подарок',day:'день',noad:'нет рекламы',chk:'проверить',i1:'полный привод · коротко едет по стенам и потолку тоннеля',i2:'микродвигатели SpaceX на холодном газе: 🔥 ускоритель · 🧲 стены',i3:'баллоны и сопла: ✈️ полёт 5 с, 🔄 бочка, 🔥 ускоритель · 🧲 стены'};
+LT.uk={hint:'тап ліворуч / праворуч — зміна смуги',h1:'◀ смуга | 🧲 стіна (центр / кнопка) | смуга ▶',h2:'◀ смуга | 🔥 утримуй — прискорювач · 🧲 стіна | смуга ▶',h3:'◀ смуга | ✈️ утримуй — політ · 🔥 прискорювач · 🔄 бочка · 🧲 | смуга ▶',km:'км',kmh:'км/год',m:'м',sec:'с',start:'СТАРТ',fin:'ФІНІШ',soon:'скоро',rec:'рекорд',ap:'автопілот',apn:'у наступному заїзді',apo:'вимк',copied:'посилання скопійовано',needchg:'потрібен заряд',no:'не вистачає',full:'повний заряд',regen:'+25% через',next:'Далі:',stT:'Зарядна станція Tesla',stN:'Зачекайте 2 хвилини, перегляньте 2 реклами або заплатіть 1 ⭐ за миттєву зарядку',fr:'Друзі',inv:'Запросити',lnk:'Посилання',frN:'Друг отримує $ 3 000 + ⚡ 50%',gold:'золото',sh1:'Побий мій рекорд!',sh2:'🚀 Roadster Loop — перегони в тунелі! Приєднуйся: $ 3 000 і ⚡ 50% у подарунок',day:'день',noad:'немає реклами',chk:'перевірити',i1:'повний привід · недовго їде по стінах і стелі тунелю',i2:'мікродвигуни SpaceX на холодному газі: 🔥 прискорювач · 🧲 стіни',i3:'балони й сопла: ✈️ політ 5 с, 🔄 бочка, 🔥 прискорювач · 🧲 стіни'};
+LT.es={hint:'toca izquierda / derecha: cambiar de carril',h1:'◀ carril | 🧲 pared (centro / botón) | carril ▶',h2:'◀ carril | 🔥 mantén: acelerador · 🧲 pared | carril ▶',h3:'◀ carril | ✈️ mantén: volar · 🔥 acelerador · 🔄 giro · 🧲 | carril ▶',km:'km',kmh:'km/h',m:'m',sec:'s',start:'SALIDA',fin:'META',soon:'pronto',rec:'récord',ap:'piloto automático',apn:'en la próxima carrera',apo:'apagado',copied:'enlace copiado',needchg:'falta carga',no:'no alcanza',full:'carga completa',regen:'+25% en',next:'Siguiente:',stT:'Estación de carga Tesla',stN:'Espera 2 minutos, mira 2 anuncios o paga 1 ⭐ por carga instantánea',fr:'Amigos',inv:'Invitar',lnk:'Enlace',frN:'Tu amigo recibe $ 3 000 + ⚡ 50%',gold:'oro',sh1:'¡Supera mi récord!',sh2:'🚀 Roadster Loop: ¡carrera en el túnel! Únete: $ 3 000 y ⚡ 50% de regalo',day:'día',noad:'sin anuncios',chk:'comprobar',i1:'tracción total · avanza un rato por paredes y techo del túnel',i2:'propulsores de gas frío SpaceX: 🔥 acelerador · 🧲 paredes',i3:'tanques y toberas: ✈️ vuelo 5 s, 🔄 giro, 🔥 acelerador · 🧲 paredes'};
+LT.pt={hint:'toque esquerda / direita: trocar de faixa',h1:'◀ faixa | 🧲 parede (centro / botão) | faixa ▶',h2:'◀ faixa | 🔥 segure: acelerador · 🧲 parede | faixa ▶',h3:'◀ faixa | ✈️ segure: voar · 🔥 acelerador · 🔄 giro · 🧲 | faixa ▶',km:'km',kmh:'km/h',m:'m',sec:'s',start:'LARGADA',fin:'CHEGADA',soon:'em breve',rec:'recorde',ap:'piloto automático',apn:'na próxima corrida',apo:'desligado',copied:'link copiado',needchg:'precisa de carga',no:'insuficiente',full:'carga completa',regen:'+25% em',next:'Próximo:',stT:'Estação de recarga Tesla',stN:'Espere 2 minutos, veja 2 anúncios ou pague 1 ⭐ para carga instantânea',fr:'Amigos',inv:'Convidar',lnk:'Link',frN:'Seu amigo ganha $ 3 000 + ⚡ 50%',gold:'ouro',sh1:'Bata meu recorde!',sh2:'🚀 Roadster Loop — corrida no túnel! Entre: $ 3 000 e ⚡ 50% de presente',day:'dia',noad:'sem anúncios',chk:'verificar',i1:'tração integral · anda por pouco tempo nas paredes e no teto do túnel',i2:'propulsores a gás frio SpaceX: 🔥 acelerador · 🧲 paredes',i3:'tanques e bocais: ✈️ voo de 5 s, 🔄 giro, 🔥 acelerador · 🧲 paredes'};
+LT.de={hint:'links / rechts tippen: Spur wechseln',h1:'◀ Spur | 🧲 Wand (Mitte / Knopf) | Spur ▶',h2:'◀ Spur | 🔥 halten: Booster · 🧲 Wand | Spur ▶',h3:'◀ Spur | ✈️ halten: fliegen · 🔥 Booster · 🔄 Rolle · 🧲 | Spur ▶',km:'km',kmh:'km/h',m:'m',sec:'s',start:'START',fin:'ZIEL',soon:'bald',rec:'Rekord',ap:'Autopilot',apn:'im nächsten Lauf',apo:'aus',copied:'Link kopiert',needchg:'Ladung nötig',no:'nicht genug',full:'voll geladen',regen:'+25% in',next:'Weiter:',stT:'Tesla-Ladestation',stN:'Warte 2 Minuten, sieh 2 Werbevideos oder zahle 1 ⭐ für sofortiges Laden',fr:'Freunde',inv:'Einladen',lnk:'Link',frN:'Dein Freund erhält $ 3 000 + ⚡ 50%',gold:'Gold',sh1:'Schlag meinen Rekord!',sh2:'🚀 Roadster Loop — Rennen im Tunnel! Mach mit: $ 3 000 und ⚡ 50% Geschenk',day:'Tag',noad:'keine Werbung',chk:'prüfen',i1:'Allrad · fährt kurz an Tunnelwänden und Decke',i2:'SpaceX-Kaltgasdüsen: 🔥 Booster · 🧲 Wände',i3:'Tanks und Düsen: ✈️ 5 s Flug, 🔄 Rolle, 🔥 Booster · 🧲 Wände'};
+LT.fr={hint:'touchez gauche / droite : changer de voie',h1:'◀ voie | 🧲 mur (centre / bouton) | voie ▶',h2:'◀ voie | 🔥 maintenir : booster · 🧲 mur | voie ▶',h3:'◀ voie | ✈️ maintenir : voler · 🔥 booster · 🔄 tonneau · 🧲 | voie ▶',km:'km',kmh:'km/h',m:'m',sec:'s',start:'DÉPART',fin:'ARRIVÉE',soon:'bientôt',rec:'record',ap:'pilote auto',apn:'à la prochaine course',apo:'désactivé',copied:'lien copié',needchg:'recharge nécessaire',no:'insuffisant',full:'charge complète',regen:'+25% dans',next:'Suite :',stT:'Station de recharge Tesla',stN:'Attendez 2 minutes, regardez 2 pubs ou payez 1 ⭐ pour une charge instantanée',fr:'Amis',inv:'Inviter',lnk:'Lien',frN:'Votre ami reçoit $ 3 000 + ⚡ 50 %',gold:'or',sh1:'Bats mon record !',sh2:'🚀 Roadster Loop — course dans le tunnel ! Rejoins-nous : $ 3 000 et ⚡ 50 % offerts',day:'jour',noad:'pas de pub',chk:'vérifier',i1:'transmission intégrale · roule brièvement sur les murs et le plafond',i2:'propulseurs à gaz froid SpaceX : 🔥 booster · 🧲 murs',i3:'réservoirs et tuyères : ✈️ vol de 5 s, 🔄 tonneau, 🔥 booster · 🧲 murs'};
+LT.tr={hint:'sola / sağa dokun: şerit değiştir',h1:'◀ şerit | 🧲 duvar (orta / düğme) | şerit ▶',h2:'◀ şerit | 🔥 basılı tut: hızlandırıcı · 🧲 duvar | şerit ▶',h3:'◀ şerit | ✈️ basılı tut: uç · 🔥 hızlandırıcı · 🔄 takla · 🧲 | şerit ▶',km:'km',kmh:'km/sa',m:'m',sec:'sn',start:'BAŞLA',fin:'BİTİŞ',soon:'yakında',rec:'rekor',ap:'otopilot',apn:'sonraki yarışta',apo:'kapalı',copied:'bağlantı kopyalandı',needchg:'şarj gerekli',no:'yetersiz',full:'tam şarj',regen:'+25% için',next:'Sıradaki:',stT:'Tesla şarj istasyonu',stN:'2 dakika bekle, 2 reklam izle ya da anında şarj için 1 ⭐ öde',fr:'Arkadaşlar',inv:'Davet et',lnk:'Bağlantı',frN:'Arkadaşın $ 3 000 + ⚡ %50 alır',gold:'altın',sh1:'Rekorumu geç!',sh2:'🚀 Roadster Loop — tünelde yarış! Katıl: $ 3 000 ve ⚡ %50 hediye',day:'gün',noad:'reklam yok',chk:'kontrol',i1:'dört çeker · tünel duvarında ve tavanda kısa süre gider',i2:'SpaceX soğuk gaz iticileri: 🔥 hızlandırıcı · 🧲 duvarlar',i3:'tanklar ve nozullar: ✈️ 5 sn uçuş, 🔄 takla, 🔥 hızlandırıcı · 🧲 duvarlar'};
+LT.id={hint:'ketuk kiri / kanan: pindah jalur',h1:'◀ jalur | 🧲 dinding (tengah / tombol) | jalur ▶',h2:'◀ jalur | 🔥 tahan: booster · 🧲 dinding | jalur ▶',h3:'◀ jalur | ✈️ tahan: terbang · 🔥 booster · 🔄 putar · 🧲 | jalur ▶',km:'km',kmh:'km/jam',m:'m',sec:'dtk',start:'MULAI',fin:'FINIS',soon:'segera',rec:'rekor',ap:'autopilot',apn:'di balapan berikutnya',apo:'mati',copied:'tautan disalin',needchg:'butuh daya',no:'tidak cukup',full:'daya penuh',regen:'+25% dalam',next:'Berikutnya:',stT:'Stasiun pengisian Tesla',stN:'Tunggu 2 menit, tonton 2 iklan, atau bayar 1 ⭐ untuk pengisian instan',fr:'Teman',inv:'Undang',lnk:'Tautan',frN:'Temanmu mendapat $ 3 000 + ⚡ 50%',gold:'emas',sh1:'Kalahkan rekorku!',sh2:'🚀 Roadster Loop — balapan di terowongan! Gabung: $ 3 000 dan ⚡ 50% hadiah',day:'hari',noad:'tidak ada iklan',chk:'cek',i1:'penggerak semua roda · melaju singkat di dinding dan langit-langit terowongan',i2:'pendorong gas dingin SpaceX: 🔥 booster · 🧲 dinding',i3:'tangki dan nozel: ✈️ terbang 5 dtk, 🔄 putar, 🔥 booster · 🧲 dinding'};
+LT.ar={hint:'اضغط يسار / يمين لتغيير المسار',h1:'◀ مسار | 🧲 جدار (المنتصف / زر) | مسار ▶',h2:'◀ مسار | 🔥 اضغط مطولاً: معزّز · 🧲 جدار | مسار ▶',h3:'◀ مسار | ✈️ اضغط مطولاً: طيران · 🔥 معزّز · 🔄 دوران · 🧲 | مسار ▶',km:'كم',kmh:'كم/س',m:'م',sec:'ث',start:'انطلاق',fin:'النهاية',soon:'قريباً',rec:'الرقم القياسي',ap:'القيادة الآلية',apn:'في السباق القادم',apo:'متوقفة',copied:'تم نسخ الرابط',needchg:'الشحن مطلوب',no:'غير كافٍ',full:'شحن كامل',regen:'+25% خلال',next:'التالي:',stT:'محطة شحن تسلا',stN:'انتظر دقيقتين أو شاهد إعلانين أو ادفع 1 ⭐ لشحن فوري',fr:'الأصدقاء',inv:'دعوة',lnk:'الرابط',frN:'صديقك يحصل على $ 3 000 + ⚡ 50%',gold:'ذهبي',sh1:'تحدَّ رقمي القياسي!',sh2:'🚀 Roadster Loop — سباق داخل النفق! انضم: $ 3 000 و ⚡ 50% هدية',day:'يوم',noad:'لا توجد إعلانات',chk:'تحقق',i1:'دفع رباعي · يسير لفترة قصيرة على جدران النفق وسقفه',i2:'دافعات غاز بارد من SpaceX: 🔥 معزّز · 🧲 جدران',i3:'خزانات وفوهات: ✈️ طيران 5 ث، 🔄 دوران، 🔥 معزّز · 🧲 جدران'};
 var CN=['Pretoria','Kingston','Philadelphia','Los Angeles','Boca Chica','McGregor','SpaceX'];
 var CITYL={en:['Pretoria','Kingston','Philadelphia','Los Angeles','Boca Chica','McGregor','SpaceX Test Site'],ru:['Претория','Кингстон','Филадельфия','Лос-Анджелес','Бока-Чика','Мак-Грегор','Полигон SpaceX'],uk:['Преторія','Кінгстон','Філадельфія','Лос-Анджелес','Бока-Чика','Мак-Грегор','Полігон SpaceX'],es:['Pretoria','Kingston','Filadelfia','Los Ángeles','Boca Chica','McGregor','Base SpaceX'],pt:['Pretória','Kingston','Filadélfia','Los Angeles','Boca Chica','McGregor','Base SpaceX'],de:['Pretoria','Kingston','Philadelphia','Los Angeles','Boca Chica','McGregor','SpaceX-Testgelände'],fr:['Pretoria','Kingston','Philadelphie','Los Angeles','Boca Chica','McGregor','Site SpaceX'],tr:['Pretoria','Kingston','Filadelfiya','Los Angeles','Boca Chica','McGregor','SpaceX Test Alanı'],id:['Pretoria','Kingston','Philadelphia','Los Angeles','Boca Chica','McGregor','Lokasi SpaceX'],ar:['بريتوريا','كينغستون','فيلادلفيا','لوس أنجلوس','بوكا تشيكا','ماكغريغور','موقع SpaceX']};
 var LANGS=['en','ru','uk','es','pt','de','fr','tr','id','ar'],lang='en';
@@ -282,7 +292,7 @@ function applyLang(){
   $('lgb').textContent='🌐 '+lang.toUpperCase();refresh()}
 
 var TG=window.Telegram&&window.Telegram.WebApp;
-var TIERS=[{t100:1.5,cost:0},{t100:.85,cost:50000},{t100:.55,cost:250000}];
+var TIERS=[{t100:2.9,cost:0},{t100:1.9,cost:50000},{t100:.9,cost:250000},{t100:.59,cost:750000}];
 var BOOSTK=230,MAXK=230, KEY='roadster_loop_v3';
 var S={v:0,miles:0,owned:1,tier:1,best:0,skin:0,id:0,name:'guest',stage:0,chg:100,chgT:Date.now(),lvl:0,chgDone:0,own:{},eq:{body:'white',yoke:'white',neon:'cyan'},adc:{},refCount:0,refClaimed:{},refBy:0};
 /* каталог: [имя, цвет, цена]. цена: 0 — бесплатно, m — миль, a — просмотров рекламы, s — звёзд */
@@ -453,7 +463,7 @@ var screen=new THREE.Mesh(new THREE.BoxGeometry(0.65,0.26,0.03),neonMat);screen.
   var m=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.09,0.2),bodyDark);m.position.set(x,-0.55,-1.65);cabin.add(m);
 });
 var under=new THREE.Mesh(new THREE.BoxGeometry(2.1,0.03,1.8),neonMat);under.position.set(0,-0.98,-1.95);cabin.add(under);
-var cabinLight=new THREE.PointLight(0x00e8ff,0.35,10);cabinLight.position.set(0,-0.2,-1);cabin.add(cabinLight);
+var cabinLight=new THREE.PointLight(0x00e8ff,0.55,10);cabinLight.position.set(0,-0.2,-1);cabin.add(cabinLight);
 
 /* Tunnel */
 var R_TUBE=12,SEG_LEN=24,SEG_N=9,tubeSegs=[],tubeRoot=new THREE.Group();scene.add(tubeRoot);
@@ -518,20 +528,66 @@ for(i=0;i<5;i++){var L=new THREE.Mesh(new THREE.BoxGeometry(2,0.1,0.35),mLight);
 scene.add(garage);
 
 /* Obstacles — only on road */
-function makeTruck(){
+function makeTruck(){ /* Tesla Semi */
+  var g=new THREE.Group();
+  g.add(tcProf([[-1.0,0.5],[-1.0,2.3],[-2.0,2.3],[-3.0,1.4],[-3.3,0.9],[-3.3,0.5]],2.2,tcMat(0xd8dce0)));
+  g.add(tcProf([[-1.5,2.15],[-2.5,1.75],[-2.5,1.15],[-1.5,1.15]],2.24,tcGlass));
+  var tr=new THREE.Mesh(new THREE.BoxGeometry(2.3,2.4,5.0),tcMat(0xeef0f2));tr.position.set(0,1.5,1.2);g.add(tr);
+  var ch=new THREE.Mesh(new THREE.BoxGeometry(2.2,0.35,4.6),tcTire);ch.position.set(0,0.4,1.4);g.add(ch);
+  [-1,1].forEach(function(sx){[-2.2,1.6,2.8].forEach(function(z){var w=new THREE.Mesh(tcWheelGeo,tcTire);w.scale.set(1.2,1,1.2);w.rotation.z=Math.PI/2;w.position.set(sx*1.1,0.4,z);g.add(w)})});
+  var tl=new THREE.Mesh(new THREE.BoxGeometry(2.0,0.08,0.04),tcTail);tl.position.set(0,0.8,3.72);g.add(tl);
+  var hl=new THREE.Mesh(new THREE.BoxGeometry(1.6,0.06,0.04),neonMat);hl.position.set(0,0.75,-3.32);g.add(hl);
+  g.userData={w:2.4,h:2.7,l:6.9};return g;
+}
+function makeTruckOld(){
   var g=new THREE.Group();
   var cab=new THREE.Mesh(new THREE.BoxGeometry(2.2,2.0,1.9),new THREE.MeshLambertMaterial({color:0x2a3548}));cab.position.set(0,1.1,-2);g.add(cab);
   var box=new THREE.Mesh(new THREE.BoxGeometry(2.3,2.4,4.8),new THREE.MeshLambertMaterial({color:0x3a4558}));box.position.set(0,1.3,1);g.add(box);
   g.userData={w:2.4,h:2.7,l:6.8};return g;
 }
+var tcMats={},tcN=0,tcCol=[0xe8eaed,0xb81f2a,0x15181d,0x2a4f9e,0x9aa1a8];
+var tcGlass=new THREE.MeshStandardMaterial({color:0x0b1118,metalness:0.8,roughness:0.12});
+var tcTire=new THREE.MeshLambertMaterial({color:0x0a0a0c});
+var tcTail=new THREE.MeshBasicMaterial({color:0xff2a2a});
+var tcWheelGeo=new THREE.CylinderGeometry(0.34,0.34,0.26,12);
+function tcMat(c){return tcMats[c]||(tcMats[c]=new THREE.MeshStandardMaterial({color:c,metalness:0.55,roughness:0.3}))}
+function tcProf(pts,w,mat){var s=new THREE.Shape();pts.forEach(function(p,i){if(i)s.lineTo(p[0],p[1]);else s.moveTo(p[0],p[1])});var m=new THREE.Mesh(new THREE.ExtrudeGeometry(s,{depth:w,bevelEnabled:false}),mat);m.rotation.y=-Math.PI/2;m.position.x=w/2;return m}
 function makeTesla(){
+  var g=new THREE.Group(),k=tcN++%3,col=tcCol[Math.floor(Math.random()*tcCol.length)],L=2.1,W=1.9,H=1.35,ty=0.62,tw=1.5,wx=0.88;
+  if(k===0){ /* Model S / 3 */
+    g.add(tcProf([[2.1,0.28],[2.1,0.72],[1.6,0.8],[-1.3,0.8],[-2.1,0.62],[-2.1,0.28]],1.9,tcMat(col)));
+    g.add(tcProf([[1.45,0.78],[0.8,1.28],[-0.45,1.3],[-1.1,0.78]],1.7,tcGlass));
+  }else if(k===1){ /* Model Y */
+    H=1.55;ty=0.84;
+    g.add(tcProf([[2.1,0.3],[2.1,0.95],[1.7,1.0],[-1.2,0.92],[-2.1,0.65],[-2.1,0.3]],1.9,tcMat(col)));
+    g.add(tcProf([[1.75,0.95],[1.35,1.5],[-0.5,1.52],[-1.15,0.92]],1.7,tcGlass));
+  }else{ /* Cybertruck */
+    L=2.3;W=2.1;H=1.6;ty=0.95;tw=2.0;wx=0.95;
+    g.add(tcProf([[2.3,0.35],[2.3,1.05],[1.2,1.1],[0.4,1.55],[-2.3,0.75],[-2.3,0.35]],2.1,tcMat(0xa7adb3)));
+    g.add(tcProf([[0.2,1.43],[-1.6,0.9],[-1.6,0.78],[0.2,0.78]],2.14,tcGlass));
+  }
+  [-1,1].forEach(function(sx){[-1.3,1.3].forEach(function(z){var w=new THREE.Mesh(tcWheelGeo,tcTire);w.rotation.z=Math.PI/2;w.position.set(sx*wx,0.34,z);g.add(w)})});
+  var tl=new THREE.Mesh(new THREE.BoxGeometry(tw,0.07,0.04),tcTail);tl.position.set(0,ty,L+0.02);g.add(tl);
+  var hl=new THREE.Mesh(new THREE.BoxGeometry(1.3,0.05,0.04),neonMat);hl.position.set(0,0.6,-L-0.02);g.add(hl);
+  g.userData={w:W+0.1,h:H,l:L*2};return g;
+}
+function makeTeslaOld(){
   var g=new THREE.Group();
   var body=new THREE.Mesh(new THREE.BoxGeometry(1.95,0.7,4.0),new THREE.MeshStandardMaterial({color:0xe8eaed,metalness:0.5,roughness:0.32}));body.position.set(0,0.55,0);g.add(body);
   var roof=new THREE.Mesh(new THREE.BoxGeometry(1.7,0.55,1.85),new THREE.MeshStandardMaterial({color:0xd0d4d8,metalness:0.45,roughness:0.35}));roof.position.set(0,1.05,-0.1);g.add(roof);
   var light=new THREE.Mesh(new THREE.BoxGeometry(1.3,0.05,0.04),neonMat);light.position.set(0,0.7,-2);g.add(light);
   g.userData={w:2.0,h:1.5,l:4.2};return g;
 }
-function makeBarrier(){
+function makeBarrier(){ /* Tesla Roadster */
+  var g=new THREE.Group();
+  g.add(tcProf([[2.0,0.25],[2.0,0.62],[1.3,0.72],[-1.2,0.7],[-2.0,0.45],[-2.0,0.25]],1.9,tcMat(0xffc21a)));
+  g.add(tcProf([[1.0,0.7],[0.5,1.05],[-0.4,1.08],[-0.9,0.7]],1.6,tcGlass));
+  [-1,1].forEach(function(sx){[-1.25,1.25].forEach(function(z){var w=new THREE.Mesh(tcWheelGeo,tcTire);w.rotation.z=Math.PI/2;w.position.set(sx*0.88,0.34,z);g.add(w)})});
+  var tl=new THREE.Mesh(new THREE.BoxGeometry(1.6,0.07,0.04),tcTail);tl.position.set(0,0.56,2.02);g.add(tl);
+  var hl=new THREE.Mesh(new THREE.BoxGeometry(1.2,0.05,0.04),neonMat);hl.position.set(0,0.5,-2.02);g.add(hl);
+  g.userData={w:2.0,h:1.1,l:4.0};return g;
+}
+function makeBarrierOld(){
   var g=new THREE.Group();
   var b=new THREE.Mesh(new THREE.BoxGeometry(2.2,1.0,0.55),new THREE.MeshLambertMaterial({color:0xff6a1a}));b.position.set(0,0.5,0);g.add(b);
   g.userData={w:2.3,h:1.05,l:0.75};return g;
@@ -561,7 +617,7 @@ function spawnRow(){
   pick.forEach(function(l){
     var pt=PTR[k],r=Math.random(),kind=r<pt?'truck':r<pt+(1-pt)*.67?'tesla':'barr';
     var m=pools[kind].find(function(p){return !p.visible});if(!m)return;
-    placeOnRoad(m,l,-170-Math.random()*12);act.push(m);placed.push(l);
+    placeOnRoad(m,l,-170-Math.random()*12);m.userData.sp=15;act.push(m);placed.push(l);
   });
   lastFree=[0,1,2].filter(function(l){return placed.indexOf(l)<0});   // по факту поставленных препятствий
 }
@@ -601,22 +657,22 @@ function updateBonus(v,dt){
   if(bonusIdx<1&&ratio>=bonusMark){
     var m=bonusM[bonusIdx],ln=Math.floor(Math.random()*3),x=(ln-1)*LANE_W;
     for(var i=act.length-1;i>=0;i--){var o=act[i];if(Math.abs(o.userData.lat-x)<2&&Math.abs(o.position.z+180)<26){o.visible=false;act.splice(i,1)}}
-    m.visible=true;m.position.set(x,GY+1.3,-180);bonusIdx++}
+    m.visible=true;m.position.set(x,GY+1.3,-180);m.userData.lat=x;bonusIdx++}
   for(var k=0;k<3;k++){var b=bonusM[k];if(!b.visible)continue;
-    var z0=b.position.z;b.position.z+=v*dt;b.rotation.y+=dt*3;b.rotation.x+=dt*1.5;
+    var z0=b.position.z;b.position.z+=v*dt;b.position.x=(b.userData.lat||0)+(window.cvK||0)*b.position.z*b.position.z;b.rotation.y+=dt*3;b.rotation.x+=dt*1.5;
     if(b.position.z>12){b.visible=false;continue}
-    if(z0<=1.8&&b.position.z>=-1.8&&Math.abs(b.position.x-px)<1.9&&y<2.8){
+    if(z0<=1.8&&b.position.z>=-1.8&&Math.abs((b.userData.lat||0)-px)<1.9&&y<2.8){
       b.visible=false;bonusGot++;bonusPts=50;toast('⚡ +50%');beep(1000,.25,'sine',.12);hap('light')}}
 }
 function clearActs(){for(var i=0;i<act.length;i++)act[i].visible=false;act.length=0;for(var j=0;j<bonusM.length;j++)bonusM[j].visible=false}
 
 function startGame(){
-  clearActs();bonusIdx=0;bonusGot=0;bonusPts=0;bonusMark=.35+Math.random()*.3;lastBn=-1;MAXK=[230,250,320][S.tier-1];BOOSTK=[230,300,390][S.tier-1];boostId=-1;wrCool=0;lastFree=[0,1,2];$('lv').textContent=(S.lvl||0)+1;
+  clearActs();bonusIdx=0;bonusGot=0;bonusPts=0;bonusMark=.35+Math.random()*.3;lastBn=-1;MAXK=[300,370,370,370][S.tier-1];BOOSTK=[300,370,530,612][S.tier-1];boostId=-1;wrCool=0;lastFree=[0,1,2];$('lv').textContent=(S.lvl||0)+1;
   lane=1;px=0;y=0;vy=0;air=100;grounded=true;thrust=false;
   rolling=false;rollAng=0;tilt=0;steerA=0;kmh=0;score=0;T=0;
   multUntil=0;sinceRow=0;gap=47;shakeKick=0;
   bankAng=0;bankTarget=0;wallPhase=0;
-  autoUntil=pendingAuto||0;pendingAuto=0;revived=false;doubled=false;reviveUntil=0;thrustId=-1;cd=3;cdN=0;goT=0;lastKm=-1;wrT=0;var bb=$('bsb'),tb=$('thb'),rb=$('rlb');bb.style.display=S.tier>=2?'':'none';tb.style.display=S.tier>=3?'':'none';tb.textContent='✈️';rb.style.display=S.tier>=3?'':'none';bb.style.right=S.tier>=3?'104px':'14px';bb.style.width=bb.style.height=S.tier>=3?'64px':'78px';bb.style.fontSize=S.tier>=3?'28px':'34px';rb.style.right='184px';$('help').textContent=t('h'+S.tier);$('cd').style.opacity=0;
+  autoUntil=pendingAuto||0;pendingAuto=0;revived=false;doubled=false;reviveUntil=0;thrustId=-1;cd=3;cdN=0;goT=0;lastKm=-1;wrT=0;var bb=$('bsb'),tb=$('thb'),rb=$('rlb');bb.style.display=S.tier>=3?'':'none';tb.style.display=S.tier>=4?'':'none';tb.textContent='✈️';rb.style.display=S.tier>=4?'':'none';$('wrb').style.display=S.tier>=2?'':'none';$('help').textContent=t('h'+[1,1,2,3][S.tier-1]);$('cd').style.opacity=0;
   routeIdx=S.stage%ROUTES.length;
   var rt=currentRoute();
   stageDist=0;stageGoal=rt.len*(MAXK/230); // быстрее машина — длиннее этап, время то же
@@ -654,11 +710,11 @@ function steer(d){
   lane=Math.max(0,Math.min(2,lane+d));
   beep(300,0.03,'square',0.03);
 }
-function rollNow(){if(state!=='GAMEPLAY'||S.tier<3||grounded||rolling||wallPhase)return;rolling=true;rollT=0;multUntil=T+4;puff(1);beep(500,.28,'sawtooth',.08)}
+function rollNow(){if(state!=='GAMEPLAY'||S.tier<4||grounded||rolling||wallPhase)return;rolling=true;rollT=0;multUntil=T+4;puff(1);beep(500,.28,'sawtooth',.08)}
 function thrustOn(){
-  if(state!=='GAMEPLAY'||S.tier<2||wallPhase)return;
+  if(state!=='GAMEPLAY'||S.tier<3||wallPhase)return;
   var now=performance.now();
-  if(S.tier>=3&&!grounded&&now-lastTap<280&&!rolling){
+  if(S.tier>=4&&!grounded&&now-lastTap<280&&!rolling){
     rolling=true;rollT=0;multUntil=T+4;
     puff(1);
     beep(500,0.28,'sawtooth',0.08);
@@ -672,17 +728,17 @@ addEventListener('keydown',function(e){
   if(e.repeat)return;audioInit();
   if(e.code==='ArrowLeft'||e.code==='KeyA')steer(-1);
   else if(e.code==='ArrowRight'||e.code==='KeyD')steer(1);
-  else if(e.code==='KeyB'){boostId=-2}else if(e.code==='KeyW'||e.code==='ArrowDown'){wallRide()}else if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();thrustOn();if(S.tier===1)wallRide()}
+  else if(e.code==='KeyB'){boostId=-2}else if(e.code==='KeyW'||e.code==='ArrowDown'){wallRide()}else if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();thrustOn();if(S.tier===2)wallRide()}
 });
 addEventListener('keyup',function(e){if(e.code==='KeyB')boostId=-1;if(e.code==='Space'||e.code==='ArrowUp')thrust=false});
 var thrustId=-1;
-$('tapM').addEventListener('pointerdown',function(e){e.preventDefault();thrustId=e.pointerId;thrustOn();if(S.tier===1)wallRide()});
+$('tapM').addEventListener('pointerdown',function(e){e.preventDefault();thrustId=e.pointerId;thrustOn();if(S.tier===2)wallRide()});
 $('wrb').addEventListener('pointerdown',function(e){e.preventDefault();wallRide()});
 $('bsb').addEventListener('pointerdown',function(e){e.preventDefault();boostId=e.pointerId});
 $('thb').addEventListener('pointerdown',function(e){e.preventDefault();thrustId=e.pointerId;thrustOn()});
 $('rlb').addEventListener('pointerdown',function(e){e.preventDefault();rollNow()});
 function relT(e){if(e.pointerId===thrustId){thrust=false;thrustId=-1}if(e.pointerId===boostId)boostId=-1}
-function boostHeld(){return boostId!==-1||(S.tier===2&&thrustId!==-1)}
+function boostHeld(){return boostId!==-1||(S.tier===3&&thrustId!==-1)}
 addEventListener('pointerdown',audioInit);addEventListener('pointerup',relT);addEventListener('pointercancel',relT);
 addEventListener('contextmenu',function(e){e.preventDefault()});
 
@@ -699,7 +755,7 @@ $('sad').onclick=function(){
   });
 };
 $('sst').onclick=openCustom;$('bc').onclick=openCustom;$('cb').onclick=goHome;$('bf').onclick=function(){renderFriends();setState('FRIENDS')};$('fb').onclick=goHome;
-$('sdbg').onclick=function(){payStars('miles1000',function(ok){if(ok){S.miles+=1000;save();refresh();toast('+1 000 🔋')}})};
+$('sdbg').onclick=function(){payStars('miles1000',function(ok){if(ok){S.miles+=1000;save();refresh();toast('+1 000 $')}})};
 $('fshare').onclick=function(){shareRef()};$('bf').addEventListener('click',function(){$('chb').style.display=(CHANNEL&&SERVER_URL&&!S.subDone)?'':'none'});$('fcopy').onclick=function(){try{navigator.clipboard.writeText(refLink()).then(function(){toast('✅ '+t('copied'))},function(){toast('📤')})}catch(e){toast('📤')}};
 ['body','yoke','neon'].forEach(function(t){$('ct_'+t).onclick=function(){ctab=t;renderCustom()}});
 
@@ -727,7 +783,7 @@ function buildArrival(rt,g){var sk=$('arSk');sk.innerHTML='';
   for(var i=0;i<30;i++){var b=document.createElement('div');b.className='b';b.style.height=(30+Math.random()*90)+'px';b.style.width=(10+Math.random()*16)+'px';b.style.animationDelay=(i*.045)+'s,'+(Math.random()*3)+'s';sk.appendChild(b)}
   $('arCity').textContent=String(cn(rt.to)).toUpperCase();$('arSub').textContent=cn(rt.from)+' → '+cn(rt.to)+' · 450 '+t('km');lastShare='🏁 '+cn(rt.to)+' · '+fmt(Math.floor(score))+' '+t('m')+'! '+t('sh1');
   var nx=ROUTES[S.stage%ROUTES.length];
-  $('arStats').innerHTML='⏱ '+fmtT(T)+' &nbsp; 📏 '+fmt(Math.floor(score))+' &nbsp; +'+fmt(g)+' 🔋';
+  $('arStats').innerHTML='⏱ '+fmtT(T)+' &nbsp; 📏 '+fmt(Math.floor(score))+' &nbsp; +'+fmt(g)+' $';
   $('arNext').textContent=t('next')+' '+cn(nx.from)+' → '+cn(nx.to)+' · LV '+((S.lvl||0)+1)}
 var CARSVG='<svg viewBox="0 0 120 50"><defs><linearGradient id="sv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#c3c9d3"/><stop offset="1" stop-color="#7c8593"/></linearGradient></defs><path d="M4 35 L10 28 L38 23 L56 14 L82 14 L100 25 L114 29 L116 37 L4 37 Z" fill="url(#sv)" stroke="#eef2f8" stroke-width="1.2"/><path d="M59 16 L80 16 L93 25 L52 25 Z" fill="#3a3016" opacity=".9"/><circle cx="30" cy="38" r="8" fill="#10151d"/><circle cx="30" cy="38" r="4" fill="#cfd4de"/><circle cx="92" cy="38" r="8" fill="#10151d"/><circle cx="92" cy="38" r="4" fill="#cfd4de"/></svg>';
 /* ---- кастомизация ---- */
@@ -738,14 +794,14 @@ function openCustom(){renderCustom();setState('CUSTOM')}
 function renderCustom(){['body','yoke','neon'].forEach(function(t){$('ct_'+t).classList.toggle('sel',t===ctab)});
   var box=$('citems');box.innerHTML='';
   CAT[ctab].forEach(function(it){var key=ctab+':'+it[0],c=it[2],own=!c||S.own[key],eq=S.eq[ctab]===it[0];
-    var st=own?(eq?'✅':'👆'):c.m?'🔋 '+fmt(c.m):c.a?'📺 '+(S.adc[key]||0)+'/'+c.a:'⭐ '+c.s;
+    var st=own?(eq?'✅':'👆'):c.m?'$ '+fmt(c.m):c.a?'📺 '+(S.adc[key]||0)+'/'+c.a:'⭐ '+c.s;
     var b=document.createElement('button');b.type='button';b.className='card'+(eq?' sel':'');
     b.innerHTML='<div class="sw" style="background:'+it[1]+';box-shadow:0 0 10px '+it[1]+'"></div><div>'+st+'</div>';
     b.onclick=function(){buyItem(key,it,own)};box.appendChild(b)})}
 function buyItem(key,it,own){var tab=key.split(':')[0],c=it[2];
   function unlock(){S.own[key]=1;S.eq[tab]=it[0];save();refresh();renderCustom();toast('✅');beep(700,.15,'sine',.1)}
   if(own){S.eq[tab]=it[0];save();refresh();renderCustom();return}
-  if(c.m){if(S.miles<c.m){toast(t('no')+' 🔋');return}S.miles-=c.m;unlock()}
+  if(c.m){if(S.miles<c.m){toast(t('no')+' $');return}S.miles-=c.m;unlock()}
   else if(c.a)showRewardedAd(function(){S.adc[key]=(S.adc[key]||0)+1;if(S.adc[key]>=c.a)unlock();else{save();renderCustom();toast('📺 '+S.adc[key]+'/'+c.a)}});
   else payStars('item_'+key,function(ok){if(ok)unlock()})}
 /* ---- друзья (реферальная программа) ---- */
@@ -753,43 +809,43 @@ function refLink(){return APP_LINK+'?startapp=ref_'+(S.id||0)}
 function api(path,body,cb){if(!SERVER_URL||!TG||!TG.initData){cb(null);return}
   try{fetch(SERVER_URL+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(x){return x.json()}).then(cb).catch(function(){cb(null)})}catch(e){cb(null)}}
 function refInit(){var sp=TG&&TG.initDataUnsafe&&TG.initDataUnsafe.start_param,ref=(sp&&sp.indexOf('ref_')===0)?sp.slice(4).replace(/\D/g,''):'';
-  if(ref&&!S.refBy&&S.id&&String(ref)!==String(S.id)){S.refBy=ref;S.miles+=3000;giveCharge(50);setTimeout(function(){toast('🤝 +3 000 🔋 ⚡ +50%')},3800)}
+  if(ref&&!S.refBy&&S.id&&String(ref)!==String(S.id)){S.refBy=ref;S.miles+=3000;giveCharge(50);setTimeout(function(){toast('🤝 +3 000 $ ⚡ +50%')},3800)}
   api('/reg',{initData:TG&&TG.initData,ref:ref},function(x){if(x&&typeof x.count==='number'){S.refCount=x.count;save()}})}
 function openChannel(){var u='https://t.me/'+CHANNEL;try{if(TG&&TG.openTelegramLink)TG.openTelegramLink(u);else window.open(u)}catch(e){}}
 $('chb').onclick=function(){
   if(S.subDone){return}
   if(!chStep){chStep=1;openChannel();$('chb').textContent='✅ '+t('chk');return}
   api('/sub',{initData:TG&&TG.initData},function(x){
-    if(x&&x.member){S.subDone=1;if(!x.claimed){S.miles+=5000;toast('+5 000 🔋')}save();refresh();$('chb').style.display='none'}
-    else{toast('📢 ✖');chStep=0;$('chb').textContent='📢 +5 000 🔋'}})};
+    if(x&&x.member){S.subDone=1;if(!x.claimed){S.miles+=5000;toast('+5 000 $')}save();refresh();$('chb').style.display='none'}
+    else{toast('📢 ✖');chStep=0;$('chb').textContent='📢 +5 000 $'}})};
 $('arSh').onclick=function(){shareRef(lastShare)};
 $('lgb').onclick=function(){var i=(LANGS.indexOf(lang)+1)%LANGS.length;S.lang=LANGS[i];lang=S.lang;save();applyLang()};
 function shareRef(txt){var u='https://t.me/share/url?url='+encodeURIComponent(refLink())+'&text='+encodeURIComponent(txt||t('sh2'));try{if(TG&&TG.openTelegramLink)TG.openTelegramLink(u);else window.open(u)}catch(e){}}
-var REFR=[{n:1,t:'🔋 5 000',g:function(){S.miles+=5000}},{n:3,t:'⚡ 100%<br>🔋 10 000',g:function(){giveCharge(100);S.miles+=10000}},{n:5,t:'🎨 {g}',g:function(){S.own['body:gold']=1}},{n:10,t:'💡 {g}<br>🔋 50 000',g:function(){S.own['neon:gold']=1;S.miles+=50000}}];
+var REFR=[{n:1,t:'$ 5 000',g:function(){S.miles+=5000}},{n:3,t:'⚡ 100%<br>$ 10 000',g:function(){giveCharge(100);S.miles+=10000}},{n:5,t:'🎨 {g}',g:function(){S.own['body:gold']=1}},{n:10,t:'💡 {g}<br>$ 50 000',g:function(){S.own['neon:gold']=1;S.miles+=50000}}];
 function renderFriends(){var c=S.refCount||0;$('fcnt').textContent=c;$('fbarf').style.width=Math.min(100,c*10)+'%';var box=$('ladder');box.innerHTML='';
   REFR.forEach(function(q){var done=S.refClaimed[q.n],can=c>=q.n&&!done,b=document.createElement('button');b.type='button';b.className='card'+(can?' sel':'');
     b.innerHTML='<div style="font-size:18px">👥 '+q.n+'</div><div style="font-size:12px;min-height:30px">'+q.t.replace('{g}',t('gold'))+'</div><div>'+(done?'✅':can?'🎁':'🔒')+'</div>';
     b.onclick=function(){if(!can)return;S.refClaimed[q.n]=1;q.g();save();refresh();renderFriends();toast('🎁 ✅')};box.appendChild(b)})}
 var lastShare='',chStep=0,infoTier=0;
-function tinfo(n){return ['<b>Roadster Performance</b><br>👤👤👤👤 · ','<b>Roadster Thrust</b><br>👤👤 · ','<b>Roadster Rocket</b><br>👤 · '][n-1]+t('i'+n)+'<br>🏁 '+[230,250,320][n-1]+' '+t('kmh')+(n>1?' · 🔥 '+[0,300,390][n-1]+' '+t('kmh'):'')+(n===3?' · ✈️ 5 '+t('sec'):'')}
+function tinfo(n){var ru=lang==='ru'||lang==='uk',N=['Roadster','Roadster Performance','Roadster Thrust','Roadster Rocket'],D=ru?['Активная аэродинамика','Вентилятор под днищем','Вентиляторы + задние сопла','Вентиляторы + сопла + полётная система']:['Active aerodynamics','Underbody fan','Fans + rear nozzles','Fans + nozzles + flight system'],SE=['👤👤👤👤','👤👤','👤👤','👤'];return '<b>'+N[n-1]+'</b><br>'+SE[n-1]+' · '+D[n-1]+'<br>⏱ 0–100: '+[2.9,1.9,.9,.59][n-1]+' '+t('sec')+'<br>🏁 '+[300,370,370,370][n-1]+' '+t('kmh')+(n>2?' · 🔥 '+[0,0,530,612][n-1]+' '+t('kmh'):'')+(n===4?' · ✈️ 5 '+t('sec'):'')}
 function renderShop(){
   var box=$('tiers');box.innerHTML='';$('tierInfo').innerHTML=tinfo(infoTier||S.tier);
-  [1,2,3].forEach(function(n){
+  [1,2,3,4].forEach(function(n){
     var c=TIERS[n-1].cost,own=S.owned>=n;
     var b=document.createElement('button');b.type='button';
     b.className='card'+(S.tier===n?' sel':'');
-    b.innerHTML='<div class="ic">'+[CARSVG,'⚡','🚀'][n-1]+'</div><div style="font-size:11px">'+['👤👤👤👤','👤👤','👤'][n-1]+'</div><div>'+(own?(S.tier===n?'✅':'👆'):'🔒 '+fmt(c))+'</div>';
+    b.innerHTML='<div class="ic">'+[CARSVG,'💨','⚡','🚀'][n-1]+'</div><div style="font-size:11px">'+['👤👤👤👤','👤👤','👤👤','👤'][n-1]+'</div><div>'+(own?(S.tier===n?'✅':'👆'):'🔒 '+fmt(c))+'</div>';
     b.onclick=function(){
       infoTier=n;if(own)S.tier=n;
       else if(S.owned===n-1&&S.miles>=c){S.miles-=c;S.owned=n;S.tier=n;beep(700,0.18,'sine',0.12)}
-      else{toast(t('no')+' 🔋');renderShop();return}
+      else{toast(t('no')+' $');renderShop();return}
       save();refresh();renderShop();
     };
     box.appendChild(b);
   });
 }
 
-function wallRide(){
+function wallRide(){if(S.tier<2)return;
   if(state!=='GAMEPLAY'||cd>0||wallPhase||!grounded)return;
   if(wrCool>0){toast('🧲 ⏳ '+Math.ceil(wrCool));return}
   wrDir=lane<1?-1:lane>1?1:(wrDir||1);wallPhase=1;wrT=0;wrCool=10;bankTarget=wrDir*Math.PI*.42;
@@ -814,7 +870,7 @@ function stepGame(dt){
   if(goT>0){goT-=dt;if(goT<=0)$('cd').style.opacity=0}
   T+=dt;
   var t100=TIERS[S.tier-1].t100;
-  var boostOn=S.tier>=2&&boostHeld()&&air>0&&kmh>=100&&!wallPhase;   // ускоритель: только 2-я и 3-я модели
+  var boostOn=S.tier>=3&&boostHeld()&&air>0&&kmh>=100&&!wallPhase;   // ускоритель: только 2-я и 3-я модели
   if(boostOn){kmh=Math.min(BOOSTK,kmh+45*dt);air-=20*dt;usedGas=true;puffT-=dt;if(puffT<=0){puff(.25);puffT=.35}}
   else if(kmh<100)kmh=Math.min(100,kmh+100/t100*dt);
   else kmh=kmh>MAXK?Math.max(MAXK,kmh-30*dt):Math.min(MAXK,kmh+((MAXK-kmh)*0.048+1.8)*dt);
@@ -851,9 +907,9 @@ function stepGame(dt){
   px+=dx*Math.min(1,15*dt);
   steerA+=(dx*12-steerA)*Math.min(1,10*dt);
   tilt+=(-dx*0.035-tilt)*Math.min(1,8*dt);
-  if(grounded)shakeKick=Math.max(shakeKick,Math.min(1,Math.abs(dx)/3)*(S.tier===1?0.4:0.12));
+  if(grounded)shakeKick=Math.max(shakeKick,Math.min(1,Math.abs(dx)/3)*(S.tier<=2?0.4:0.12));
 
-  if(S.tier>=3&&thrust&&air>0&&!wallPhase){
+  if(S.tier>=4&&thrust&&air>0&&!wallPhase){
     if(grounded){grounded=false;vy=4.2;puff(.4)}
     vy=Math.min(8,vy+28*dt);air-=20*dt;usedGas=true;puffT-=dt;if(puffT<=0){puff(.3);puffT=.3}
   }
@@ -868,12 +924,12 @@ function stepGame(dt){
   if(rolling){rollT+=dt/0.7;if(rollT>=1){rolling=false;rollT=0}}
   rollAng=rolling?rollT*Math.PI*2:0;
 
-  updateBonus(v,dt);sinceRow+=v*dt;
+  updateBonus(v,dt);sinceRow+=(v-Math.min(15,v*0.4))*dt;
   if(sinceRow>=gap){sinceRow=0;gap=(Math.max(25,v*0.855)+Math.random()*7.2)/GAPF[dIdx()];spawnRow()}
 
   for(var i=act.length-1;i>=0;i--){
     var m=act[i],d=m.userData,z0=m.position.z;
-    m.position.z+=v*dt;
+    m.position.z+=(v-Math.min(d.sp||0,v*0.4))*dt;
     if(m.position.z-d.l/2>12){m.visible=false;act.splice(i,1);continue}
     if(!invincible()&&z0<=d.l/2+0.35&&m.position.z>=-(d.l/2+0.35)&&Math.abs(d.lat-px)<d.w/2+0.45&&y<d.h-0.12){
       crash();return;
@@ -893,7 +949,7 @@ function hud(){var bt=Math.round(batNow());if(bt!==lastBn){lastBn=bt;$('bn').tex
   $('mu').textContent=autoOn?('🤖 '+Math.ceil(autoUntil-T)+t('sec')):'×2';
   var a=$('airf');a.style.height=air+'%';
   a.style.background=air<25?'linear-gradient(0deg,var(--bad),#ff8)':'linear-gradient(0deg,var(--neon),#7af)';
-  $('air').style.opacity=S.tier>=2?1:.18;$('wrb').style.opacity=(wrCool<=0&&!wallPhase)?1:.35;$('thb').style.opacity=$('bsb').style.opacity=air>1?1:.4;
+  $('air').style.opacity=S.tier>=3?1:.18;$('wrb').style.opacity=(wrCool<=0&&!wallPhase)?1:.35;$('thb').style.opacity=$('bsb').style.opacity=air>1?1:.4;
   $('fan').classList.toggle('on',grounded);
 }
 
@@ -908,15 +964,19 @@ function update(dt,now){
   shakeKick*=Math.exp(-3.5*dt);
   var v=kmh/3.6;
   var nf=66+Math.min(20,kmh*0.05);if(Math.abs(nf-cam.fov)>.2){cam.fov=nf;cam.updateProjectionMatrix()}
+  var spdT=Math.min(1,kmh/380);var cvT=state==='GAMEPLAY'?Math.sin(T*0.11)*Math.sin(T*0.047+1)*0.0006:0;window.cvK=(window.cvK||0)+(cvT-(window.cvK||0))*Math.min(1,dt*1.5);var cvK=window.cvK;
+  mGlow.color.setRGB(0.0+spdT*0.75,0.91-spdT*0.55,1.0);
+  mGlow.opacity=0.32+spdT*0.25;
+  scene.fog.color.setRGB(0.012+spdT*0.05,0.024+spdT*0.01,0.055+spdT*0.09);
   for(var si=0;si<tubeSegs.length;si++){
     var seg=tubeSegs[si];seg.position.z+=v*dt;
-    if(seg.position.z>SEG_LEN/2+8)seg.position.z-=SEG_LEN*SEG_N;
+    if(seg.position.z>SEG_LEN/2+8)seg.position.z-=SEG_LEN*SEG_N;seg.position.x=cvK*seg.position.z*seg.position.z;seg.rotation.y=Math.atan(2*cvK*seg.position.z);
   }
   // Obstacles always on floor
   for(var ai=0;ai<act.length;ai++){
     var m=act[ai];if(!m.visible)continue;
     
-    m.position.x=m.userData.lat;m.position.y=GY;m.rotation.z=0;
+    m.position.x=m.userData.lat+cvK*m.position.z*m.position.z;m.position.y=GY;m.rotation.z=0;m.rotation.y=Math.atan(2*cvK*m.position.z);
   }
   if(state==='GAMEPLAY'||state==='CRASH'||state==='ARRIVAL'){
     var amp=kmh*0.00007+shakeKick*0.08;
@@ -944,7 +1004,7 @@ function frame(now){
 }
 
 function startGift(){if(START_GIFT&&!S.gift){S.gift=1;S.miles+=START_GIFT}}
-function dailyBonus(){var d=Math.floor(Date.now()/864e5);if(!S.day){S.day=d;S.streak=0;return}if(S.day===d)return;S.streak=(S.day===d-1)?Math.min(7,(S.streak||0)+1):1;S.day=d;var b=500*S.streak;S.miles+=b;setTimeout(function(){toast('🎁 '+t('day')+' '+S.streak+': +'+fmt(b)+' 🔋')},2200)}
+function dailyBonus(){var d=Math.floor(Date.now()/864e5);if(!S.day){S.day=d;S.streak=0;return}if(S.day===d)return;S.streak=(S.day===d-1)?Math.min(7,(S.streak||0)+1):1;S.day=d;var b=500*S.streak;S.miles+=b;setTimeout(function(){toast('🎁 '+t('day')+' '+S.streak+': +'+fmt(b)+' $')},2200)}
 setInterval(function(){if(state==='MENU'||state==='STATION'){refresh();if(state==='STATION')renderStation()}},1000);
 setState('BOOT');tgReady();
 load(function(){
